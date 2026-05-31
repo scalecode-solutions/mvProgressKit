@@ -1,0 +1,6 @@
+Target dependency graph (3 targets)
+Target 'mvProgressKitDemo' in project 'mvProgressKitDemo'
+➜ Explicit dependency on target 'mvProgressKit' in project 'mvProgressKit'
+Target 'mvProgressKit' in project 'mvProgressKit'
+➜ Explicit dependency on target 'mvProgressKit' in project 'mvProgressKit'
+Target 'mvProgressKit' in project 'mvProgressKit' (no dependencies)

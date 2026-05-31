@@ -1,33 +1,80 @@
 import SwiftUI
 
-/// Builds concentric ring values from one pregnancy input — three nested views
-/// of the same timeline, each a finer division of the one outside it:
-///   outer = whole pregnancy · middle = current phase · inner = current week.
-/// Mirrors `PregnancyBarData`: domain logic here, generic `MultiRing` stays dumb.
+/// The three nested metrics.
+public enum RingMetric: String, CaseIterable, Sendable {
+    case pregnancy   // whole 280-day journey
+    case phase       // progress through the current trimester / Labor Ready
+    case week        // progress through the current week
+}
+
+/// How the three metrics map onto outer→inner rings. A flag, not a fork —
+/// the renderer is identical; only the order changes.
+public enum RingArrangement: String, CaseIterable, Sendable {
+    /// A — scope shrinks inward: pregnancy (outer) · phase · week (inner).
+    case containment
+    /// B — immediate outermost: week (outer) · phase · pregnancy (inner).
+    case recency
+    /// C — 280-day clock as the spine; phase + week march around it.
+    case timelineCore
+
+    /// Metrics ordered outer → inner.
+    public var order: [RingMetric] {
+        switch self {
+        case .containment:  return [.pregnancy, .phase, .week]
+        case .recency:      return [.week, .phase, .pregnancy]
+        case .timelineCore: return [.week, .pregnancy, .phase]
+        }
+    }
+}
+
+/// Where a ring's color comes from.
+public enum RingColoring: String, CaseIterable, Sendable {
+    /// Each metric keeps a fixed identity hue (pregnancy deepest → week lightest)
+    /// regardless of position. Good when a legend identifies the rings.
+    case byMetric
+    /// The outer ring is always deepest, shading lighter inward — so every
+    /// arrangement reads equally bold. Good when there's no legend.
+    case byRadius
+}
+
+/// Builds concentric ring values from one pregnancy input. Mirrors
+/// `PregnancyBarData`: domain logic here, generic `MultiRing` stays dumb.
 public enum PregnancyRingData {
-    public static func rings(for input: PregnancyBarInput) -> [RingValue] {
+    public static func rings(for input: PregnancyBarInput,
+                             arrangement: RingArrangement = .containment,
+                             coloring: RingColoring = .byRadius) -> [RingValue] {
         let palette = PregnancyPalette.forGender(input.gender)
         let weeks = Double(input.completedWeeks) + Double(input.dayOfWeek) / 7.0
 
-        // Outer — whole pregnancy (0→40 weeks / 280 days).
-        let overall = clamp(input.progressPercent / 100.0)
+        func fraction(_ metric: RingMetric) -> Double {
+            switch metric {
+            case .pregnancy:
+                return clamp(input.progressPercent / 100.0)
+            case .phase:
+                let (start, end) = phaseRange(input.phase)
+                return clamp((weeks - start) / (end - start))
+            case .week:
+                return clamp(Double(input.dayOfWeek) / 7.0)
+            }
+        }
 
-        // Middle — progress through the current phase.
-        let (start, end) = phaseRange(input.phase)
-        let phase = clamp((weeks - start) / (end - start))
+        func metricStops(_ metric: RingMetric) -> [Color] {
+            switch metric {
+            case .pregnancy: return palette.trimester3
+            case .phase:     return palette.trimester2
+            case .week:      return palette.trimester1
+            }
+        }
 
-        // Inner — progress through the current week.
-        let week = clamp(Double(input.dayOfWeek) / 7.0)
+        // Outer → inner: deepest → lightest.
+        let radiusStops = [palette.trimester3, palette.trimester2, palette.trimester1]
 
-        return [
-            RingValue(id: 0, fillFraction: overall, fill: .linear(palette.trimester3)),
-            RingValue(id: 1, fillFraction: phase,   fill: .linear(palette.trimester2)),
-            RingValue(id: 2, fillFraction: week,    fill: .linear(palette.trimester1)),
-        ]
+        return arrangement.order.enumerated().map { index, metric in
+            let stops = coloring == .byRadius ? radiusStops[index] : metricStops(metric)
+            return RingValue(id: index, fillFraction: fraction(metric), fill: .linear(stops))
+        }
     }
 
-    /// Phase week bounds — boundaries match `PregnancyPhase`. Labor Ready runs
-    /// 37→42 so it has room for overtime and caps cleanly.
     static func phaseRange(_ phase: PregnancyPhase) -> (Double, Double) {
         switch phase {
         case .first:      return (0, 14)
@@ -40,30 +87,47 @@ public enum PregnancyRingData {
     private static func clamp(_ x: Double) -> Double { min(max(x, 0), 1) }
 }
 
-/// "Pregnancy at a glance" — the nested rings with a center week readout.
-/// A ready Clingy dashboard element, not just a demo prop.
+/// "Pregnancy at a glance" — nested rings with an adaptive center week readout
+/// (the label scales to the clear inner hole so it never overlaps the rings).
 public struct PregnancyRings: View {
     public var input: PregnancyBarInput
+    public var arrangement: RingArrangement
+    public var coloring: RingColoring
     public var lineWidth: CGFloat
     public var spacing: CGFloat
 
-    public init(input: PregnancyBarInput, lineWidth: CGFloat = 12, spacing: CGFloat = 4) {
+    public init(input: PregnancyBarInput,
+                arrangement: RingArrangement = .containment,
+                coloring: RingColoring = .byRadius,
+                lineWidth: CGFloat = 12,
+                spacing: CGFloat = 4) {
         self.input = input
+        self.arrangement = arrangement
+        self.coloring = coloring
         self.lineWidth = lineWidth
         self.spacing = spacing
     }
 
     public var body: some View {
-        ZStack {
-            MultiRing(rings: PregnancyRingData.rings(for: input),
-                      lineWidth: lineWidth, spacing: spacing)
-            VStack(spacing: 0) {
-                Text("\(input.completedWeeks)")
-                    .font(.system(size: 30, weight: .bold))
-                    .monospacedDigit()
-                Text("weeks")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+        GeometryReader { geo in
+            let size = min(geo.size.width, geo.size.height)
+            let band = 3 * lineWidth + 2 * spacing          // three strokes + two gaps
+            let innerDiameter = max(size - 2 * band, 28)
+            ZStack {
+                MultiRing(rings: PregnancyRingData.rings(for: input,
+                                                         arrangement: arrangement,
+                                                         coloring: coloring),
+                          lineWidth: lineWidth, spacing: spacing)
+                VStack(spacing: 0) {
+                    Text("\(input.completedWeeks)")
+                        .font(.system(size: innerDiameter * 0.42, weight: .bold))
+                        .monospacedDigit()
+                    Text("weeks")
+                        .font(.system(size: innerDiameter * 0.16, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: innerDiameter)
+                .minimumScaleFactor(0.6)
             }
         }
     }

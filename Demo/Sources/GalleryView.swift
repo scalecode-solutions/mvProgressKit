@@ -5,8 +5,9 @@ import mvProgressKit
 /// lifecycle including the week-37 home-stretch switch and overtime past 40;
 /// the gender picker re-themes everything live. Every component renders below.
 struct GalleryView: View {
-    @State private var week: Double = 20
+    @State private var week: Double = 24.5
     @State private var gender: Gender = .girl
+    @State private var coloring: RingColoring = .byRadius
 
     // MARK: Derived pregnancy input
 
@@ -40,6 +41,9 @@ struct GalleryView: View {
             VStack(alignment: .leading, spacing: 28) {
                 controls
 
+                // Rings up top, large, 2 per row.
+                ringsGrid
+
                 section("PregnancyTimelineBar — standard (full)") {
                     PregnancyTimelineBar(input: input, size: .standard, overlays: .full)
                 }
@@ -48,14 +52,6 @@ struct GalleryView: View {
                 }
                 section("PregnancyTimelineBar — lean (Prep landing)") {
                     PregnancyTimelineBar(input: input, size: .standard, overlays: .lean)
-                }
-                section("PregnancyRings — nested: pregnancy · phase · week") {
-                    HStack {
-                        Spacer()
-                        PregnancyRings(input: input, lineWidth: 14, spacing: 5)
-                            .frame(width: 170, height: 170)
-                        Spacer()
-                    }
                 }
                 section("TrackBar — task completion") {
                     TrackBar(fillFraction: taskFill, fill: deepFill, size: .compact)
@@ -66,7 +62,7 @@ struct GalleryView: View {
 
                 HStack(spacing: 24) {
                     labeledRadial("ProgressRing") {
-                        ProgressRing(fillFraction: taskFill, fill: deepFill, lineWidth: 10) {
+                        ProgressRing(fillFraction: taskFill, fill: deepFill, lineWidth: 12) {
                             Text("\(Int(taskFill * 100))%").font(.headline)
                         }
                     }
@@ -74,13 +70,6 @@ struct GalleryView: View {
                         ProgressGauge(fillFraction: input.progressPercent / 100, fill: deepFill) {
                             Text("\(Int(week))w").font(.headline)
                         }
-                    }
-                    labeledRadial("MultiRing") {
-                        MultiRing(rings: [
-                            RingValue(id: 0, fillFraction: 0.9, fill: .linear(palette.trimester3)),
-                            RingValue(id: 1, fillFraction: 0.6, fill: .linear(palette.trimester2)),
-                            RingValue(id: 2, fillFraction: 0.4, fill: .linear(palette.trimester1)),
-                        ], lineWidth: 9)
                     }
                 }
                 .padding(.top, 4)
@@ -112,11 +101,59 @@ struct GalleryView: View {
                 Text("Unknown").tag(Gender.unknown)
             }
             .pickerStyle(.segmented)
+            Picker("Coloring", selection: $coloring) {
+                Text("by radius").tag(RingColoring.byRadius)
+                Text("by metric").tag(RingColoring.byMetric)
+            }
+            .pickerStyle(.segmented)
         }
         .padding(16)
         .background(Color.white.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
+
+    // MARK: Rings grid (2 per row)
+
+    private var ringsGrid: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("PregnancyRings — arrangements + raw MultiRing")
+                .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            HStack(spacing: 16) {
+                ringCell("A", "containment") {
+                    PregnancyRings(input: input, arrangement: .containment, coloring: coloring, lineWidth: 13, spacing: 4)
+                }
+                ringCell("B", "recency") {
+                    PregnancyRings(input: input, arrangement: .recency, coloring: coloring, lineWidth: 13, spacing: 4)
+                }
+            }
+            HStack(spacing: 16) {
+                ringCell("C", "timeline-core") {
+                    PregnancyRings(input: input, arrangement: .timelineCore, coloring: coloring, lineWidth: 13, spacing: 4)
+                }
+                ringCell("—", "MultiRing (raw)") {
+                    MultiRing(rings: [
+                        RingValue(id: 0, fillFraction: 0.9, fill: .linear(palette.trimester3)),
+                        RingValue(id: 1, fillFraction: 0.6, fill: .linear(palette.trimester2)),
+                        RingValue(id: 2, fillFraction: 0.4, fill: .linear(palette.trimester1)),
+                    ], lineWidth: 13, spacing: 4)
+                }
+            }
+        }
+    }
+
+    private func ringCell<V: View>(_ tag: String, _ name: String,
+                                   @ViewBuilder _ content: () -> V) -> some View {
+        VStack(spacing: 10) {
+            content().frame(width: 150, height: 150)
+            VStack(spacing: 2) {
+                Text(tag).font(.subheadline.bold())
+                Text(name).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: Other components
 
     private var stepMarkers: [ProgressMarker] {
         (0..<5).map { i in

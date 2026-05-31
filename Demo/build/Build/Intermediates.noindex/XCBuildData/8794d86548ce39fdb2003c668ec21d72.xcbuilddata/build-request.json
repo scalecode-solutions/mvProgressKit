@@ -1,0 +1,72 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "b3344664765492efd46954603873e0046abc3b8cda82017b2bf5fd258cc28b8a"
+    }
+  ],
+  "containerPath" : "/Users/tmarq/Github/mvProgressKit/Demo/mvProgressKitDemo.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "hostTargetedPlatform" : null,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator26.5",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "arm64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Products",
+      "derivedDataPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build",
+      "indexDataStoreFolderPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_MODEL" : "iPhone18,2",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_OS_VERSION" : "26.4.1",
+          "ASSETCATALOG_FILTER_FOR_THINNING_DEVICE_CONFIGURATION" : "iPhone18,2",
+          "BUILD_ACTIVE_RESOURCES_ONLY" : "YES",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES",
+          "TARGET_DEVICE_IDENTIFIER" : "45B5C79F-87D1-494F-99D8-4C038B62EC00",
+          "TARGET_DEVICE_MODEL" : "iPhone18,2",
+          "TARGET_DEVICE_OS_VERSION" : "26.4.1",
+          "TARGET_DEVICE_PLATFORM_NAME" : "iphonesimulator",
+          "TOOLCHAINS" : "com.apple.dt.toolchain.Metal.32023.883 $(inherited)"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}
