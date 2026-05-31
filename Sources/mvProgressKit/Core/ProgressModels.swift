@@ -45,6 +45,19 @@ public enum ProgressFill: Equatable, Sendable {
             return AnyShapeStyle(AngularGradient(colors: cs, center: center))
         }
     }
+
+    /// A faint, lightened "ghost" of this fill for unfilled tracks — every stop
+    /// blended toward white by `lighten`, then dropped to `opacity`. Keeps the
+    /// gradient (so the track reads as the same material as the fill, not a
+    /// flat slab) but airy and see-through.
+    public func track(lighten: Double, opacity: Double) -> ProgressFill {
+        func ghost(_ c: Color) -> Color { c.lightened(by: lighten).opacity(opacity) }
+        switch self {
+        case .solid(let c):    return .solid(ghost(c))
+        case .linear(let cs):  return .linear(cs.map(ghost))
+        case .angular(let cs): return .angular(cs.map(ghost))
+        }
+    }
 }
 
 // MARK: - Segment

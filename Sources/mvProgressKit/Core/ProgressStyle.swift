@@ -54,9 +54,9 @@ public struct BarSize: Equatable, Sendable {
 public enum UnfilledStyle: Sendable, Equatable {
     /// A fixed neutral track (`ProgressStyle.trackColor`) — today's look.
     case neutral
-    /// A light shade of the *fill* color, blended toward white by `amount`
-    /// (0→fill color, 1→white). Reads as a clean pastel ghost of the fill.
-    case shade(Double)
+    /// A faint gradient ghost of the *fill*: each stop blended toward white by
+    /// `lighten` (0→fill, 1→white), then dropped to `opacity`. Airy + see-through.
+    case shade(lighten: Double, opacity: Double)
 }
 
 // MARK: - Shared style tokens

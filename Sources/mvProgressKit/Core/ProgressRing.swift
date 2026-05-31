@@ -71,8 +71,10 @@ public struct ProgressRing<Center: View>: View {
     /// Track paint: neutral color, or a light shade of the fill.
     private var resolvedTrack: AnyShapeStyle {
         switch style.unfilled {
-        case .neutral:        return AnyShapeStyle(trackColor)
-        case .shade(let amt): return AnyShapeStyle(fill.leadColor.lightened(by: amt))
+        case .neutral:
+            return AnyShapeStyle(trackColor)
+        case .shade(let lighten, let opacity):
+            return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).radialStyle())
         }
     }
 

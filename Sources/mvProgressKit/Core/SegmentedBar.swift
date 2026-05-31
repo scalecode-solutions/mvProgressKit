@@ -98,15 +98,15 @@ public struct SegmentedBar: View {
     @ViewBuilder
     private func overtimeRegion(_ ot: OvertimeConfig, width: CGFloat) -> some View {
         let shape = pill(left: false, right: true)
-        let otColor = segments.last?.fill.leadColor ?? .accentColor
+        let otFill = segments.last?.fill ?? .solid(.accentColor)
         let bar = HStack(spacing: 0) {
-            Rectangle().fill(otColor).frame(width: width * ot.fraction)
+            Rectangle().fill(otFill.linearStyle()).frame(width: width * ot.fraction)
             Spacer(minLength: 0)
         }
         .frame(width: width, height: size.height)
 
         ZStack(alignment: .leading) {
-            unfilled(otColor).clipShape(shape)
+            Rectangle().fill(trackStyle(for: otFill)).clipShape(shape)
             ZStack {
                 if overlays.glow { bar.blur(radius: size.glowBlur).opacity(size.glowOpacity) }
                 bar
@@ -140,7 +140,7 @@ public struct SegmentedBar: View {
             }
             HStack(spacing: 0) {
                 ForEach(offsets, id: \.seg.id) { (seg, _) in
-                    unfilled(seg.tint ?? seg.fill.leadColor)
+                    Rectangle().fill(trackStyle(for: seg.fill, tint: seg.tint))
                         .frame(width: width * seg.fraction)
                 }
                 Spacer(minLength: 0)
@@ -218,11 +218,13 @@ public struct SegmentedBar: View {
         .frame(height: size.height)
     }
 
-    /// Unfilled-track paint for a base color, per the style's `UnfilledStyle`.
-    private func unfilled(_ base: Color) -> Color {
+    /// Unfilled-track paint for a fill, per the style's `UnfilledStyle`.
+    private func trackStyle(for fill: ProgressFill, tint: Color? = nil) -> AnyShapeStyle {
         switch style.unfilled {
-        case .neutral:        return base.opacity(0.15)
-        case .shade(let amt): return base.lightened(by: amt).opacity(0.55)
+        case .neutral:
+            return AnyShapeStyle((tint ?? fill.leadColor).opacity(0.15))
+        case .shade(let lighten, let opacity):
+            return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).linearStyle())
         }
     }
 }
