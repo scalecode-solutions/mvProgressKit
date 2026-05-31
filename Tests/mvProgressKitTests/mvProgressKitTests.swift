@@ -31,8 +31,9 @@ import Testing
     #expect(input.isOverdue)
 
     let data = PregnancyBarData.make(for: input)
-    #expect((data.overtime?.activeWeeks ?? 0) >= 1)              // tail activated
-    #expect(data.fillFraction > PregnancyBarData.dueAnchor)      // fill is in the tail
+    #expect((data.overtime?.activeWeeks ?? 0) >= 1)              // overtime activated
+    #expect(data.fillFraction >= 1.0)                            // on-time pill full
+    #expect((data.overtime?.fraction ?? 0) > 0)                  // overtime filling
 }
 
 @Test func overtimeCapsAtTwoWeeks() {
@@ -40,7 +41,7 @@ import Testing
                                   daysUntilDue: -30, progressPercent: 100, gender: .unknown)
     let data = PregnancyBarData.make(for: input)
     #expect(data.overtime?.activeWeeks == 2)                    // capped at 42 weeks
-    #expect((data.overtime?.tailFill ?? 0) <= 1.0)
+    #expect((data.overtime?.fraction ?? 0) <= 1.0)
 }
 
 @Test func genderSelectsPalette() {

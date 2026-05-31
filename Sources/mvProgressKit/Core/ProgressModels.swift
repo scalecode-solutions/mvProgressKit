@@ -104,28 +104,53 @@ public struct ProgressMarker: Identifiable, Equatable, Sendable {
 
 // MARK: - Overtime
 
-/// The dormant-tail overtime model: `Due` is anchored inside the drawn span,
-/// and a reserved tail beyond it activates + fills only when overdue — so the
-/// bar reads "full at Due" by default and never visually recedes.
+/// How overtime is drawn once the value passes the on-time span.
+public enum OvertimeStyle: Sendable, Equatable {
+    /// The on-time pill spans the full width until due, then **tears**: the
+    /// main pill compresses and squares its right edge, and a separate
+    /// overtime pill buds off past a gap. The reflow is the "you crossed the
+    /// line" moment.
+    case tear
+    /// The overtime pill's slot is always reserved (faint when empty) and just
+    /// fills in when overdue — no reflow.
+    case reserved
+}
+
+/// Split-pill overtime: the on-time span and the overtime span render as two
+/// separate capsules (rounded outer ends, flat inner ends) with a gap between.
 public struct OvertimeConfig: Equatable, Sendable {
-    /// Position of the "Due" anchor within the drawn span, 0...1.
-    public var dueAnchor: Double
-    /// Weeks of overtime currently active (0 = dormant tail).
+    /// Fill within the overtime window, 0...1.
+    public var fraction: Double
+    /// Weeks of overtime currently active (0 = on time).
     public var activeWeeks: Int
-    /// Fill progress within the active overtime portion, 0...1.
-    public var tailFill: Double
-    /// Maximum overtime weeks before the tail stops extending.
+    public var style: OvertimeStyle
+    /// Width fraction the on-time pill takes once the overtime pill is shown.
+    public var mainWidth: Double
+    /// Gap fraction between the two pills.
+    public var gap: Double
+    /// Maximum overtime weeks.
     public var maxWeeks: Int
 
-    public init(dueAnchor: Double,
+    public init(fraction: Double = 0,
                 activeWeeks: Int = 0,
-                tailFill: Double = 0,
+                style: OvertimeStyle = .tear,
+                mainWidth: Double = 0.72,
+                gap: Double = 0.025,
                 maxWeeks: Int = 2) {
-        self.dueAnchor = dueAnchor
+        self.fraction = min(max(fraction, 0), 1)
         self.activeWeeks = min(activeWeeks, maxWeeks)
-        self.tailFill = tailFill
+        self.style = style
+        self.mainWidth = mainWidth
+        self.gap = gap
         self.maxWeeks = maxWeeks
     }
+
+    /// Is overtime currently happening?
+    public var isActive: Bool { activeWeeks > 0 || fraction > 0 }
+    /// Should the overtime pill be drawn at all? (always for `.reserved`.)
+    public var isShown: Bool { style == .reserved || isActive }
+    /// The on-time pill's width fraction given style/state (full until shown).
+    public var resolvedMainWidth: Double { isShown ? mainWidth : 1.0 }
 }
 
 // MARK: - Overlays

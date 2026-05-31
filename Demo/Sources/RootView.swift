@@ -9,6 +9,7 @@ struct RootView: View {
     @State private var gender: Gender
     @State private var coloring: RingColoring
     private let unfilled: UnfilledStyle
+    private let overtimeStyle: OvertimeStyle
     private let showChrome: Bool
 
     init() {
@@ -18,6 +19,7 @@ struct RootView: View {
         _gender = State(initialValue: s.gender)
         _coloring = State(initialValue: s.coloring)
         unfilled = s.unfilled
+        overtimeStyle = s.overtime
         showChrome = s.chrome
     }
 
@@ -56,7 +58,8 @@ struct RootView: View {
             }
             .navigationTitle("mvProgressKit")
             .navigationDestination(for: DemoScreen.self) { screen in
-                DetailPage(screen: screen, input: input, coloring: $coloring, style: style)
+                DetailPage(screen: screen, input: input, coloring: $coloring,
+                           style: style, overtimeStyle: overtimeStyle)
                     .navigationTitle(screen.title)
                     .navigationBarTitleDisplayMode(.inline)
             }

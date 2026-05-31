@@ -1,19 +1,18 @@
 import SwiftUI
 
 /// The workhorse linear bar: proportional segments, optional markers, a
-/// position dot, a value label, a glow, and an optional dormant overtime tail.
+/// position dot, a value label, a glow, and split-pill overtime.
 ///
 /// Everything is data-driven — `segments`/`markers` come from a factory (e.g.
 /// the Pregnancy layer), so this view knows nothing about trimesters or weeks.
-/// `TrackBar` is its degenerate single-segment case; the dashboard timeline and
-/// the home-stretch bar are both just different segment/marker data.
+/// When `overtime` is shown, the on-time span and the overtime span render as
+/// two separate capsules (rounded outer ends, flat inner ends) with a gap.
 public struct SegmentedBar: View {
     public var segments: [ProgressSegment]
     public var markers: [ProgressMarker]
-    /// Overall fill, 0...1 across the full drawn span (segments + any tail).
+    /// Fill within the on-time span, 0...1 (overtime fill lives in `overtime`).
     public var fillFraction: Double
     public var overtime: OvertimeConfig?
-    /// Caller-supplied label content (e.g. "20 days to go", "+3 days").
     public var valueText: AttributedString?
     public var size: BarSize
     public var style: ProgressStyle
@@ -40,7 +39,6 @@ public struct SegmentedBar: View {
     private var radius: CGFloat { size.height / 2 }
     private var fill: Double { min(max(fillFraction, 0), 1) }
 
-    /// Cumulative start fraction for each segment.
     private var offsets: [(seg: ProgressSegment, start: Double)] {
         var cum = 0.0
         return segments.map { seg in
@@ -49,18 +47,6 @@ public struct SegmentedBar: View {
         }
     }
 
-    /// Unfilled track color for a segment: neutral low-opacity tint, or a
-    /// clean light shade of the segment's fill.
-    private func segmentTrackColor(_ seg: ProgressSegment) -> Color {
-        switch style.unfilled {
-        case .neutral:
-            return (seg.tint ?? seg.fill.leadColor).opacity(0.15)
-        case .shade(let amt):
-            return seg.fill.leadColor.lightened(by: amt).opacity(0.55)
-        }
-    }
-
-    /// Lead color of whichever segment the fill currently sits in (dot/glow tint).
     private var fillColor: Color {
         for (seg, start) in offsets where fill <= start + seg.fraction {
             return seg.fill.leadColor
@@ -71,64 +57,94 @@ public struct SegmentedBar: View {
     public var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
+            let mainW = overtime?.resolvedMainWidth ?? 1.0
+            let mainPx = w * mainW
+            let showOT = overtime?.isShown ?? false
+            let gapPx = w * (overtime?.gap ?? 0)
+            let otStart = mainPx + gapPx
+            let otWidth = max(w - otStart, 0)
+
             ZStack(alignment: .leading) {
-                track(width: w)
-                fillBar(width: w)
-                    .modifier(AnimateFill(animation: style.animation, value: fill))
-                if let ot = overtime, fill > ot.dueAnchor {
-                    overtimeFill(ot, width: w)
+                mainRegion(width: mainPx, squaredRight: showOT)
+                if showOT, let ot = overtime {
+                    overtimeRegion(ot, width: otWidth)
+                        .offset(x: otStart)
                 }
-                if overlays.markers { markerTicks(width: w) }
-                if let ot = overtime { dueMarker(ot, width: w) }
-                if overlays.positionDot { positionDot(width: w) }
-                if overlays.valueLabel, let valueText { valueLabelView(valueText) }
             }
             .frame(height: size.height)
+            .animation(style.animation, value: mainW)
         }
         .frame(height: size.height)
     }
 
-    // MARK: Track (glass + segment tints + dividers)
+    // MARK: On-time region
 
     @ViewBuilder
-    private func track(width: CGFloat) -> some View {
+    private func mainRegion(width: CGFloat, squaredRight: Bool) -> some View {
+        let shape = pill(left: true, right: !squaredRight)
         ZStack(alignment: .leading) {
-            // Base track
+            trackLayer(width: width).clipShape(shape)
+            fillLayer(width: width).clipShape(shape)
+                .modifier(AnimateFill(animation: style.animation, value: fill))
+            if overlays.markers { markerTicks(width: width) }
+            if overlays.positionDot { positionDot(width: width) }
+            if overlays.valueLabel, let valueText { valueLabelView(valueText) }
+        }
+        .frame(width: width, height: size.height, alignment: .leading)
+    }
+
+    // MARK: Overtime region (the torn-off pill)
+
+    @ViewBuilder
+    private func overtimeRegion(_ ot: OvertimeConfig, width: CGFloat) -> some View {
+        let shape = pill(left: false, right: true)
+        let otColor = segments.last?.fill.leadColor ?? .accentColor
+        let bar = HStack(spacing: 0) {
+            Rectangle().fill(otColor).frame(width: width * ot.fraction)
+            Spacer(minLength: 0)
+        }
+        .frame(width: width, height: size.height)
+
+        ZStack(alignment: .leading) {
+            unfilled(otColor).clipShape(shape)
+            ZStack {
+                if overlays.glow { bar.blur(radius: size.glowBlur).opacity(size.glowOpacity) }
+                bar
+            }
+            .clipShape(shape)
+        }
+        .frame(width: width, height: size.height, alignment: .leading)
+        .modifier(AnimateFill(animation: style.animation, value: ot.fraction))
+    }
+
+    private func pill(left: Bool, right: Bool) -> UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: left ? radius : 0,
+            bottomLeadingRadius: left ? radius : 0,
+            bottomTrailingRadius: right ? radius : 0,
+            topTrailingRadius: right ? radius : 0
+        )
+    }
+
+    // MARK: Layers
+
+    @ViewBuilder
+    private func trackLayer(width: CGFloat) -> some View {
+        ZStack(alignment: .leading) {
             Group {
                 if style.glassTrack {
-                    RoundedRectangle(cornerRadius: radius).fill(.ultraThinMaterial)
+                    Rectangle().fill(.ultraThinMaterial)
                 } else {
-                    RoundedRectangle(cornerRadius: radius).fill(style.trackColor)
+                    Rectangle().fill(style.trackColor)
                 }
             }
-            .frame(height: size.height)
-
-            // Faint per-segment tints
             HStack(spacing: 0) {
                 ForEach(offsets, id: \.seg.id) { (seg, _) in
-                    segmentTrackColor(seg)
+                    unfilled(seg.tint ?? seg.fill.leadColor)
                         .frame(width: width * seg.fraction)
                 }
-                Spacer(minLength: 0) // reserved tail (overtime) stays clear
+                Spacer(minLength: 0)
             }
-            .frame(height: size.height)
-            .clipShape(RoundedRectangle(cornerRadius: radius))
-
-            // Overtime zone — faint diagonal stripes mark the "bonus" territory
-            // beyond the Due anchor, so it reads as a distinct zone even empty.
-            if let ot = overtime {
-                HStack(spacing: 0) {
-                    Spacer().frame(width: width * ot.dueAnchor)
-                    DiagonalStripes(spacing: 7)
-                        .stroke(Color.white.opacity(0.10), lineWidth: 1.5)
-                        .frame(width: width * (1 - ot.dueAnchor))
-                    Spacer(minLength: 0)
-                }
-                .frame(height: size.height)
-                .clipShape(RoundedRectangle(cornerRadius: radius))
-            }
-
-            // Dividers between segments
             if overlays.dividers {
                 ForEach(offsets.dropFirst().map { $0.start }, id: \.self) { boundary in
                     Rectangle()
@@ -138,35 +154,27 @@ public struct SegmentedBar: View {
                 }
             }
         }
+        .frame(width: width, height: size.height)
     }
 
-    // MARK: Fill (per-segment gradients clipped to fill, with glow)
-
     @ViewBuilder
-    private func fillBar(width: CGFloat) -> some View {
+    private func fillLayer(width: CGFloat) -> some View {
         let bar = HStack(spacing: 0) {
             ForEach(offsets, id: \.seg.id) { (seg, start) in
                 let filled = min(max(fill - start, 0), seg.fraction)
                 if filled > 0 {
-                    Rectangle()
-                        .fill(seg.fill.linearStyle())
-                        .frame(width: width * filled)
+                    Rectangle().fill(seg.fill.linearStyle()).frame(width: width * filled)
                 }
             }
             Spacer(minLength: 0)
         }
-        .frame(height: size.height)
-        .clipShape(RoundedRectangle(cornerRadius: radius))
+        .frame(width: width, height: size.height)
 
-        ZStack(alignment: .leading) {
-            if overlays.glow {
-                bar.blur(radius: size.glowBlur).opacity(size.glowOpacity)
-            }
+        ZStack {
+            if overlays.glow { bar.blur(radius: size.glowBlur).opacity(size.glowOpacity) }
             bar
         }
     }
-
-    // MARK: Markers
 
     @ViewBuilder
     private func markerTicks(width: CGFloat) -> some View {
@@ -185,47 +193,6 @@ public struct SegmentedBar: View {
         }
     }
 
-    /// Overtime fill — the portion past the Due anchor. Striped so it reads as
-    /// a distinct "bonus time" zone rather than just more fill.
-    @ViewBuilder
-    private func overtimeFill(_ ot: OvertimeConfig, width: CGFloat) -> some View {
-        let otColor = segments.last?.fill.leadColor ?? .accentColor
-        let bar = HStack(spacing: 0) {
-            Spacer().frame(width: width * ot.dueAnchor)
-            ZStack {
-                Rectangle().fill(otColor)
-                DiagonalStripes(spacing: 7)
-                    .stroke(Color.white.opacity(0.35), lineWidth: 2)
-            }
-            .frame(width: width * (fill - ot.dueAnchor))
-            Spacer(minLength: 0)
-        }
-        .frame(height: size.height)
-        .clipShape(RoundedRectangle(cornerRadius: radius))
-
-        ZStack {
-            if overlays.glow {
-                bar.blur(radius: size.glowBlur).opacity(size.glowOpacity)
-            }
-            bar
-        }
-        .modifier(AnimateFill(animation: style.animation, value: fill))
-    }
-
-    /// The Due line — the emotional "line." Bolder than a divider, with a
-    /// shadow so it reads clearly over both fill and track.
-    @ViewBuilder
-    private func dueMarker(_ ot: OvertimeConfig, width: CGFloat) -> some View {
-        let lineWidth = max(size.dividerWidth, 2.5)
-        Rectangle()
-            .fill(Color.white)
-            .frame(width: lineWidth, height: size.height)
-            .shadow(color: .black.opacity(0.5), radius: 2)
-            .offset(x: width * ot.dueAnchor - lineWidth / 2)
-    }
-
-    // MARK: Position dot
-
     @ViewBuilder
     private func positionDot(width: CGFloat) -> some View {
         if fill > 0.02 && fill < 0.98 {
@@ -239,8 +206,6 @@ public struct SegmentedBar: View {
         }
     }
 
-    // MARK: Value label
-
     @ViewBuilder
     private func valueLabelView(_ text: AttributedString) -> some View {
         HStack {
@@ -252,20 +217,13 @@ public struct SegmentedBar: View {
         .padding(.horizontal, size.horizontalPadding)
         .frame(height: size.height)
     }
-}
 
-/// Diagonal hatch lines spanning a rect — the "overtime / bonus" texture.
-struct DiagonalStripes: Shape {
-    var spacing: CGFloat = 7
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        var x = -rect.height
-        while x < rect.width {
-            path.move(to: CGPoint(x: x, y: rect.height))
-            path.addLine(to: CGPoint(x: x + rect.height, y: 0))
-            x += spacing
+    /// Unfilled-track paint for a base color, per the style's `UnfilledStyle`.
+    private func unfilled(_ base: Color) -> Color {
+        switch style.unfilled {
+        case .neutral:        return base.opacity(0.15)
+        case .shade(let amt): return base.lightened(by: amt).opacity(0.55)
         }
-        return path
     }
 }
 

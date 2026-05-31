@@ -12,13 +12,13 @@ public struct PregnancyBarData: Sendable {
     public var valueText: AttributedString
 
     /// Home-stretch geometry constants.
-    static let dueAnchor = 0.78          // "Due" sits at 78% of the drawn span
     static let homeStretchWindowDays = 21.0   // weeks 37→40
     static let maxOvertimeDays = 14.0    // cap at 42 weeks
 
-    public static func make(for input: PregnancyBarInput) -> PregnancyBarData {
+    public static func make(for input: PregnancyBarInput,
+                            overtimeStyle: OvertimeStyle = .tear) -> PregnancyBarData {
         let palette = PregnancyPalette.forGender(input.gender)
-        return input.isLaborReady ? homeStretch(input, palette)
+        return input.isLaborReady ? homeStretch(input, palette, overtimeStyle)
                                   : fullPregnancy(input, palette)
     }
 
@@ -43,35 +43,34 @@ public struct PregnancyBarData: Sendable {
     // MARK: Home-stretch preset (weeks 37+)
 
     private static func homeStretch(_ input: PregnancyBarInput,
-                                    _ palette: PregnancyPalette) -> PregnancyBarData {
-        let segFrac = dueAnchor / 3.0
-        // Light tint behind the deep ramp — the deep home-stretch hues at low
-        // opacity read muddy on dark, so the track borrows the lightest gender
-        // shade for a clean unfilled look.
+                                    _ palette: PregnancyPalette,
+                                    _ overtimeStyle: OvertimeStyle) -> PregnancyBarData {
+        // On-time span = weeks 37→40 across the full pill (overtime tears off).
+        // Light tint behind the deep ramp keeps the unfilled track clean.
         let trackTint = palette.trimester1.first
         let segments = (0..<3).map {
-            ProgressSegment(id: $0, fraction: segFrac,
+            ProgressSegment(id: $0, fraction: 1.0 / 3.0,
                             fill: .linear(palette.homeStretch[$0]),
                             tint: trackTint)
         }
-        let markers = [(37, 0.0), (38, segFrac), (39, segFrac * 2), (40, dueAnchor)]
+        let markers = [(37, 0.0), (38, 1.0 / 3.0), (39, 2.0 / 3.0), (40, 1.0)]
             .enumerated()
             .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }
 
-        // Progress toward the due date within the 21-day window.
+        // Progress toward the due date within the 21-day window (0→1 fills the pill).
         let daysInto = homeStretchWindowDays - Double(input.daysUntilDue)
         let toDue = min(max(daysInto / homeStretchWindowDays, 0), 1)
-        var fill = toDue * dueAnchor
-        var overtime = OvertimeConfig(dueAnchor: dueAnchor)
+        var fill = toDue
+        var overtime = OvertimeConfig(fraction: 0, activeWeeks: 0, style: overtimeStyle)
 
         if input.isOverdue {
             let daysOver = Double(-input.daysUntilDue)
-            let otProgress = min(max(daysOver / maxOvertimeDays, 0), 1)
-            fill = dueAnchor + otProgress * (1 - dueAnchor)
+            let otFraction = min(max(daysOver / maxOvertimeDays, 0), 1)
             let activeWeeks = min(Int(ceil(daysOver / 7.0)), 2)
-            overtime = OvertimeConfig(dueAnchor: dueAnchor,
+            fill = 1.0  // on-time pill is complete; overtime carries the rest
+            overtime = OvertimeConfig(fraction: otFraction,
                                       activeWeeks: activeWeeks,
-                                      tailFill: otProgress)
+                                      style: overtimeStyle)
         }
 
         return PregnancyBarData(segments: segments, markers: markers,
@@ -110,19 +109,22 @@ public struct PregnancyTimelineBar: View {
     public var size: BarSize
     public var overlays: ProgressOverlays
     public var style: ProgressStyle
+    public var overtimeStyle: OvertimeStyle
 
     public init(input: PregnancyBarInput,
                 size: BarSize = .standard,
                 overlays: ProgressOverlays = .full,
-                style: ProgressStyle = .glass) {
+                style: ProgressStyle = .glass,
+                overtimeStyle: OvertimeStyle = .tear) {
         self.input = input
         self.size = size
         self.overlays = overlays
         self.style = style
+        self.overtimeStyle = overtimeStyle
     }
 
     public var body: some View {
-        let data = PregnancyBarData.make(for: input)
+        let data = PregnancyBarData.make(for: input, overtimeStyle: overtimeStyle)
         SegmentedBar(segments: data.segments,
                      markers: data.markers,
                      fillFraction: data.fillFraction,

@@ -8,6 +8,7 @@ struct DetailPage: View {
     let input: PregnancyBarInput
     @Binding var coloring: RingColoring
     let style: ProgressStyle
+    let overtimeStyle: OvertimeStyle
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
     private var deepFill: ProgressFill { .linear(palette.trimester3) }
@@ -38,10 +39,10 @@ struct DetailPage: View {
 
     private var timeline: some View {
         VStack(alignment: .leading, spacing: 24) {
-            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: .full, style: style) }
-            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: .full, style: style) }
-            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: .lean, style: style) }
-            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style) }
+            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: .full, style: style, overtimeStyle: overtimeStyle) }
+            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: .full, style: style, overtimeStyle: overtimeStyle) }
+            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: .lean, style: style, overtimeStyle: overtimeStyle) }
+            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style, overtimeStyle: overtimeStyle) }
         }
     }
 
