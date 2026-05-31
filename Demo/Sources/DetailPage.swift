@@ -11,6 +11,7 @@ struct DetailPage: View {
     let overtimeStyle: OvertimeStyle
     let indicator: PositionIndicator
     let label: TimelineLabel
+    let daysText: String?
 
     private func withIndicator(_ base: ProgressOverlays) -> ProgressOverlays {
         var o = base; o.indicator = indicator; return o
@@ -48,11 +49,13 @@ struct DetailPage: View {
         VStack(alignment: .leading, spacing: 28) {
             labeled("standard · surface chrome") {
                 PregnancyInfoCard(input: input, style: .standard, chrome: .surface,
-                                  barStyle: style, overtimeStyle: overtimeStyle, indicator: indicator)
+                                  barStyle: style, overtimeStyle: overtimeStyle,
+                                  indicator: indicator, daysText: daysText)
             }
             labeled("compact · surface chrome") {
                 PregnancyInfoCard(input: input, style: .compact, chrome: .surface,
-                                  barStyle: style, overtimeStyle: overtimeStyle, indicator: indicator)
+                                  barStyle: style, overtimeStyle: overtimeStyle,
+                                  indicator: indicator, daysText: daysText)
             }
         }
     }

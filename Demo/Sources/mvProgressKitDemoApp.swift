@@ -56,6 +56,7 @@ enum DemoLaunch {
         var label: TimelineLabel
         var animate: Bool
         var scheme: ColorScheme?
+        var daysText: String?
         var chrome: Bool
     }
 
@@ -100,6 +101,7 @@ enum DemoLaunch {
             label: label,
             animate: animate,
             scheme: scheme,
+            daysText: d.string(forKey: "daystext"),
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }

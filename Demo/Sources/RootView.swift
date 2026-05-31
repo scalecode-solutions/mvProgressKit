@@ -15,6 +15,7 @@ struct RootView: View {
     private let label: TimelineLabel
     private let useAnimate: Bool
     private let scheme: ColorScheme?
+    private let daysText: String?
     private let showChrome: Bool
 
     init() {
@@ -30,6 +31,7 @@ struct RootView: View {
         label = s.label
         useAnimate = s.animate
         scheme = s.scheme
+        daysText = s.daysText
         showChrome = s.chrome
     }
 
@@ -43,7 +45,6 @@ struct RootView: View {
         let days = Int((40.0 - week) * 7)
         return PregnancyBarInput(
             completedWeeks: Int(week),
-            currentWeek: Int(week) + 1,
             dayOfWeek: Int((week - Double(Int(week))) * 7),
             daysUntilDue: days,
             progressPercent: min(week / 40.0 * 100.0, 100),
@@ -76,7 +77,7 @@ struct RootView: View {
             .navigationDestination(for: DemoScreen.self) { screen in
                 DetailPage(screen: screen, input: input, coloring: $coloring,
                            style: style, overtimeStyle: overtimeStyle,
-                           indicator: indicator, label: label)
+                           indicator: indicator, label: label, daysText: daysText)
                     .navigationTitle(screen.title)
                     .navigationBarTitleDisplayMode(.inline)
             }

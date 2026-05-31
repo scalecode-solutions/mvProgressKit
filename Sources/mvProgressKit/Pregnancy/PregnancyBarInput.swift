@@ -24,7 +24,6 @@ public enum PregnancyPhase: Sendable, Equatable {
 /// its `Pregnancy` at the call site.
 public struct PregnancyBarInput: Equatable, Sendable {
     public var completedWeeks: Int
-    public var currentWeek: Int
     public var dayOfWeek: Int          // 0...6 into the current week
     public var daysUntilDue: Int       // negative when overdue
     public var progressPercent: Double // 0...100 across the full ~280-day span
@@ -32,14 +31,12 @@ public struct PregnancyBarInput: Equatable, Sendable {
     public var dueDate: Date?          // for "Due {date}" on the info card
 
     public init(completedWeeks: Int,
-                currentWeek: Int,
                 dayOfWeek: Int,
                 daysUntilDue: Int,
                 progressPercent: Double,
                 gender: Gender,
                 dueDate: Date? = nil) {
         self.completedWeeks = completedWeeks
-        self.currentWeek = currentWeek
         self.dayOfWeek = dayOfWeek
         self.daysUntilDue = daysUntilDue
         self.progressPercent = progressPercent

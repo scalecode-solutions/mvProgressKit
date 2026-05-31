@@ -22,6 +22,7 @@ public struct PregnancyInfoCard: View {
     public var weekText: String?
     public var trimesterText: String?
     public var dueText: String?
+    public var daysText: String?
 
     public init(input: PregnancyBarInput,
                 style: Style = .standard,
@@ -32,7 +33,8 @@ public struct PregnancyInfoCard: View {
                 showMarkers: Bool = true,
                 weekText: String? = nil,
                 trimesterText: String? = nil,
-                dueText: String? = nil) {
+                dueText: String? = nil,
+                daysText: String? = nil) {
         self.input = input
         self.style = style
         self.chrome = chrome
@@ -43,6 +45,7 @@ public struct PregnancyInfoCard: View {
         self.weekText = weekText
         self.trimesterText = trimesterText
         self.dueText = dueText
+        self.daysText = daysText
     }
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
@@ -58,6 +61,7 @@ public struct PregnancyInfoCard: View {
     }
 
     private var daysString: String {
+        if let daysText { return daysText }
         let d = input.daysUntilDue
         if d > 0 { return "\(d) days to go" }
         if d == 0 { return "Due today" }
@@ -132,7 +136,8 @@ public struct PregnancyInfoCard: View {
                                            markerTicks: false, markerLabels: false, dividers: false),
                 style: barStyle,
                 overtimeStyle: overtimeStyle,
-                label: .days
+                label: .days,
+                daysTextOverride: daysText
             )
         }
     }

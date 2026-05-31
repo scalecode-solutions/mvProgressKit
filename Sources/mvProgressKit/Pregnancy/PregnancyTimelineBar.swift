@@ -55,7 +55,7 @@ public struct PregnancyBarData: Sendable {
     private static func homeStretch(_ input: PregnancyBarInput,
                                     _ palette: PregnancyPalette,
                                     _ overtimeStyle: OvertimeStyle) -> PregnancyBarData {
-        // On-time span = weeks 37→40 across the full pill (overtime tears off).
+        // On-time span = weeks 36→40 across the full pill (overtime tears off).
         // Light tint behind the deep ramp keeps the unfilled track clean.
         let trackTint = palette.trimester1.first
         // One fill spanning a subtle light→deep sweep of the home-stretch hue.
@@ -125,14 +125,13 @@ public struct PregnancyBarData: Sendable {
     }
 }
 
-/// The ergonomic call site: hand it pregnancy input, it picks the right preset
-/// (full-pregnancy vs home-stretch) off the week signal and renders. This is
-/// the live consumer Clingy's Prep tab will use.
 /// What the value caption shows.
 public enum TimelineLabel: Sendable, Equatable {
     case none, days, week, both
 }
 
+/// The ergonomic call site: hand it pregnancy input, it picks the right preset
+/// (full-pregnancy vs home-stretch) off the week signal and renders.
 public struct PregnancyTimelineBar: View {
     public var input: PregnancyBarInput
     public var size: BarSize
@@ -140,24 +139,28 @@ public struct PregnancyTimelineBar: View {
     public var style: ProgressStyle
     public var overtimeStyle: OvertimeStyle
     public var label: TimelineLabel
+    /// Override the days string entirely (e.g. "still cooking 🍞"); nil = kit default.
+    public var daysTextOverride: String?
 
     public init(input: PregnancyBarInput,
                 size: BarSize = .standard,
                 overlays: ProgressOverlays = .full,
                 style: ProgressStyle = .glass,
                 overtimeStyle: OvertimeStyle = .tear,
-                label: TimelineLabel = .days) {
+                label: TimelineLabel = .days,
+                daysTextOverride: String? = nil) {
         self.input = input
         self.size = size
         self.overlays = overlays
         self.style = style
         self.overtimeStyle = overtimeStyle
         self.label = label
+        self.daysTextOverride = daysTextOverride
     }
 
     public var body: some View {
         let data = PregnancyBarData.make(for: input, overtimeStyle: overtimeStyle)
-        let days = data.valueText
+        let days = daysTextOverride.map { Self.styledValue($0) } ?? data.valueText
         let week = Self.weekText(input.completedWeeks)
         let leading: AttributedString?
         let trailing: AttributedString?
@@ -182,6 +185,12 @@ public struct PregnancyTimelineBar: View {
 
     static func weekText(_ week: Int) -> AttributedString {
         var s = AttributedString("Week \(week)")
+        s.font = .system(size: 14, weight: .semibold)
+        return s
+    }
+
+    static func styledValue(_ string: String) -> AttributedString {
+        var s = AttributedString(string)
         s.font = .system(size: 14, weight: .semibold)
         return s
     }

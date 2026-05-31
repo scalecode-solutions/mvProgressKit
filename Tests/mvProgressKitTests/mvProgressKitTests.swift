@@ -2,7 +2,7 @@ import Testing
 @testable import mvProgressKit
 
 @Test func fullPregnancyPresetBelowWeek37() {
-    let input = PregnancyBarInput(completedWeeks: 20, currentWeek: 21, dayOfWeek: 0,
+    let input = PregnancyBarInput(completedWeeks: 20, dayOfWeek: 0,
                                   daysUntilDue: 140, progressPercent: 50, gender: .girl)
     #expect(input.phase == .second)
     #expect(input.isLaborReady == false)
@@ -14,7 +14,7 @@ import Testing
 }
 
 @Test func homeStretchPresetAtWeek37() {
-    let input = PregnancyBarInput(completedWeeks: 37, currentWeek: 38, dayOfWeek: 0,
+    let input = PregnancyBarInput(completedWeeks: 37, dayOfWeek: 0,
                                   daysUntilDue: 21, progressPercent: 92, gender: .boy)
     #expect(input.phase == .laborReady)
     #expect(input.isLaborReady)
@@ -23,10 +23,12 @@ import Testing
     #expect(data.segments.count == 1)       // single home-stretch fill
     #expect(data.overtime != nil)           // overtime config present
     #expect(data.overtime?.activeWeeks == 0)
+    // 36→40 window: week 37 day 0 lands exactly on the 37 mark (0.25).
+    #expect(abs(data.fillFraction - 0.25) < 0.0001)
 }
 
 @Test func overtimeActivatesAndFillsPastDue() {
-    let input = PregnancyBarInput(completedWeeks: 40, currentWeek: 41, dayOfWeek: 3,
+    let input = PregnancyBarInput(completedWeeks: 40, dayOfWeek: 3,
                                   daysUntilDue: -10, progressPercent: 100, gender: .girl)
     #expect(input.isOverdue)
 
@@ -37,7 +39,7 @@ import Testing
 }
 
 @Test func overtimeCapsAtTwoWeeks() {
-    let input = PregnancyBarInput(completedWeeks: 43, currentWeek: 44, dayOfWeek: 0,
+    let input = PregnancyBarInput(completedWeeks: 43, dayOfWeek: 0,
                                   daysUntilDue: -30, progressPercent: 100, gender: .unknown)
     let data = PregnancyBarData.make(for: input)
     #expect(data.overtime?.activeWeeks == 2)                    // capped at 42 weeks
