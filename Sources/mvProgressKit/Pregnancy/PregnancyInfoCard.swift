@@ -8,8 +8,13 @@ import SwiftUI
 public struct PregnancyInfoCard: View {
     public enum Style: Sendable, Equatable { case standard, compact }
 
+    /// Optional generic card surface. `.none` = chrome-less (host wraps);
+    /// `.surface` = a generic elevated rounded card (NOT a host's bespoke chrome).
+    public enum Chrome: Sendable, Equatable { case none, surface }
+
     public var input: PregnancyBarInput
     public var style: Style
+    public var chrome: Chrome
     public var barStyle: ProgressStyle
     public var overtimeStyle: OvertimeStyle
     public var indicator: PositionIndicator
@@ -20,6 +25,7 @@ public struct PregnancyInfoCard: View {
 
     public init(input: PregnancyBarInput,
                 style: Style = .standard,
+                chrome: Chrome = .none,
                 barStyle: ProgressStyle = .glass,
                 overtimeStyle: OvertimeStyle = .tear,
                 indicator: PositionIndicator = .dot,
@@ -29,6 +35,7 @@ public struct PregnancyInfoCard: View {
                 dueText: String? = nil) {
         self.input = input
         self.style = style
+        self.chrome = chrome
         self.barStyle = barStyle
         self.overtimeStyle = overtimeStyle
         self.indicator = indicator
@@ -58,10 +65,13 @@ public struct PregnancyInfoCard: View {
     }
 
     public var body: some View {
-        switch style {
-        case .standard: standard
-        case .compact:  compact
+        Group {
+            switch style {
+            case .standard: standard
+            case .compact:  compact
+            }
         }
+        .modifier(CardSurface(chrome: chrome))
     }
 
     // MARK: Standard
@@ -118,7 +128,7 @@ public struct PregnancyInfoCard: View {
             PregnancyTimelineBar(
                 input: input,
                 size: .compact,
-                overlays: ProgressOverlays(caption: .inside, indicator: indicator, glow: true,
+                overlays: ProgressOverlays(caption: .inside, indicator: .none, glow: true,
                                            markerTicks: false, markerLabels: false, dividers: false),
                 style: barStyle,
                 overtimeStyle: overtimeStyle,
@@ -134,5 +144,23 @@ public struct PregnancyInfoCard: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(Capsule().fill(chipColor))
+    }
+}
+
+/// Optional generic elevated card surface. Not a host's bespoke chrome — just a
+/// sensible default so the card can stand alone in previews/quick use.
+private struct CardSurface: ViewModifier {
+    let chrome: PregnancyInfoCard.Chrome
+    func body(content: Content) -> some View {
+        switch chrome {
+        case .none:
+            content
+        case .surface:
+            content
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 20).fill(.regularMaterial))
+                .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.white.opacity(0.06)))
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 2)
+        }
     }
 }

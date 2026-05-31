@@ -46,19 +46,13 @@ struct DetailPage: View {
 
     private var infoCard: some View {
         VStack(alignment: .leading, spacing: 28) {
-            labeled("standard") {
-                PregnancyInfoCard(input: input, style: .standard, barStyle: style,
-                                  overtimeStyle: overtimeStyle, indicator: indicator)
-                    .padding(16)
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            labeled("standard · surface chrome") {
+                PregnancyInfoCard(input: input, style: .standard, chrome: .surface,
+                                  barStyle: style, overtimeStyle: overtimeStyle, indicator: indicator)
             }
-            labeled("compact") {
-                PregnancyInfoCard(input: input, style: .compact, barStyle: style,
-                                  overtimeStyle: overtimeStyle, indicator: indicator)
-                    .padding(16)
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            labeled("compact · surface chrome") {
+                PregnancyInfoCard(input: input, style: .compact, chrome: .surface,
+                                  barStyle: style, overtimeStyle: overtimeStyle, indicator: indicator)
             }
         }
     }
