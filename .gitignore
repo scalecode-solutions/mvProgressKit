@@ -1,0 +1,14 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Demo app is generated from Demo/project.yml via `xcodegen generate`
+Demo/*.xcodeproj/
+
+# Reference libraries cloned for study only — not part of the package
+/References/

@@ -1,0 +1,162 @@
+import SwiftUI
+
+// MARK: - Fill
+
+/// How a filled region (bar segment, ring stroke, gauge arc) is painted.
+/// The renderer maps this to a concrete `ShapeStyle`, choosing gradient
+/// direction by context (leading→trailing for bars, along-arc for rings).
+public enum ProgressFill: Equatable, Sendable {
+    case solid(Color)
+    /// Gradient stops, drawn start→end along the track.
+    case linear([Color])
+    /// Angular gradient stops, for radial tracks.
+    case angular([Color])
+
+    /// The lead (start) color — used for faint segment tints, dot glow, etc.
+    public var leadColor: Color {
+        switch self {
+        case .solid(let c):       return c
+        case .linear(let cs):     return cs.first ?? .clear
+        case .angular(let cs):    return cs.first ?? .clear
+        }
+    }
+
+    /// Resolve to a type-erased `ShapeStyle` for a linear track.
+    public func linearStyle(start: UnitPoint = .leading,
+                            end: UnitPoint = .trailing) -> AnyShapeStyle {
+        switch self {
+        case .solid(let c):
+            return AnyShapeStyle(c)
+        case .linear(let cs):
+            return AnyShapeStyle(LinearGradient(colors: cs, startPoint: start, endPoint: end))
+        case .angular(let cs):
+            return AnyShapeStyle(LinearGradient(colors: cs, startPoint: start, endPoint: end))
+        }
+    }
+
+    /// Resolve to a type-erased `ShapeStyle` for a radial track.
+    public func radialStyle(center: UnitPoint = .center) -> AnyShapeStyle {
+        switch self {
+        case .solid(let c):
+            return AnyShapeStyle(c)
+        case .linear(let cs):
+            return AnyShapeStyle(AngularGradient(colors: cs, center: center))
+        case .angular(let cs):
+            return AnyShapeStyle(AngularGradient(colors: cs, center: center))
+        }
+    }
+}
+
+// MARK: - Segment
+
+/// A proportional slice of a linear track (a trimester, a week, a category).
+public struct ProgressSegment: Identifiable, Equatable, Sendable {
+    public let id: Int
+    /// Width as a fraction of the whole drawn span (segments need not sum to 1;
+    /// any remainder is reserved space — e.g. a dormant overtime tail).
+    public var fraction: Double
+    /// Paint for the filled portion of this segment.
+    public var fill: ProgressFill
+    /// Faint background tint behind the glass track for this segment.
+    /// Defaults to the fill's lead color at low opacity when `nil`.
+    public var tint: Color?
+    public var label: String?
+
+    public init(id: Int,
+                fraction: Double,
+                fill: ProgressFill,
+                tint: Color? = nil,
+                label: String? = nil) {
+        self.id = id
+        self.fraction = fraction
+        self.fill = fill
+        self.tint = tint
+        self.label = label
+    }
+}
+
+// MARK: - Marker / Node
+
+/// State of a step node. `nil` state on a marker means "plain tick", not a node.
+public enum NodeState: Equatable, Sendable {
+    case todo, active, done
+}
+
+/// A point of interest along a track: a week tick, a milestone, or a step node.
+/// `state == nil` → a plain labeled tick; `state != nil` → a step-indicator node.
+public struct ProgressMarker: Identifiable, Equatable, Sendable {
+    public let id: Int
+    /// Position along the track, 0...1.
+    public var position: Double
+    public var label: String?
+    public var state: NodeState?
+
+    public init(id: Int,
+                position: Double,
+                label: String? = nil,
+                state: NodeState? = nil) {
+        self.id = id
+        self.position = position
+        self.label = label
+        self.state = state
+    }
+}
+
+// MARK: - Overtime
+
+/// The dormant-tail overtime model: `Due` is anchored inside the drawn span,
+/// and a reserved tail beyond it activates + fills only when overdue — so the
+/// bar reads "full at Due" by default and never visually recedes.
+public struct OvertimeConfig: Equatable, Sendable {
+    /// Position of the "Due" anchor within the drawn span, 0...1.
+    public var dueAnchor: Double
+    /// Weeks of overtime currently active (0 = dormant tail).
+    public var activeWeeks: Int
+    /// Fill progress within the active overtime portion, 0...1.
+    public var tailFill: Double
+    /// Maximum overtime weeks before the tail stops extending.
+    public var maxWeeks: Int
+
+    public init(dueAnchor: Double,
+                activeWeeks: Int = 0,
+                tailFill: Double = 0,
+                maxWeeks: Int = 2) {
+        self.dueAnchor = dueAnchor
+        self.activeWeeks = min(activeWeeks, maxWeeks)
+        self.tailFill = tailFill
+        self.maxWeeks = maxWeeks
+    }
+}
+
+// MARK: - Overlays
+
+/// Toggles for the chrome drawn on top of a track. Presets cover the common
+/// "everything", "lean", and "bare" cases; tweak individual flags as needed.
+public struct ProgressOverlays: Equatable, Sendable {
+    public var valueLabel: Bool
+    public var positionDot: Bool
+    public var glow: Bool
+    public var markers: Bool
+    public var dividers: Bool
+
+    public init(valueLabel: Bool = true,
+                positionDot: Bool = true,
+                glow: Bool = true,
+                markers: Bool = true,
+                dividers: Bool = true) {
+        self.valueLabel = valueLabel
+        self.positionDot = positionDot
+        self.glow = glow
+        self.markers = markers
+        self.dividers = dividers
+    }
+
+    /// Everything on (dashboard hero bar).
+    public static let full = ProgressOverlays()
+    /// Lean: dot + glow, no pill/markers/dividers (Prep landing bar).
+    public static let lean = ProgressOverlays(valueLabel: false, positionDot: true,
+                                              glow: true, markers: false, dividers: false)
+    /// Bare fill only (task-completion bars).
+    public static let bare = ProgressOverlays(valueLabel: false, positionDot: false,
+                                              glow: false, markers: false, dividers: false)
+}
