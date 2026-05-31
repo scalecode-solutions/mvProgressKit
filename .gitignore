@@ -9,6 +9,8 @@ DerivedData/
 
 # Demo app is generated from Demo/project.yml via `xcodegen generate`
 Demo/*.xcodeproj/
+# Demo build output (xcodebuild -derivedDataPath ./build)
+Demo/build/
 
 # Reference libraries cloned for study only — not part of the package
 /References/

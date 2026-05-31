@@ -1,4 +1,0 @@
-module mvProgressKit {
-header "mvProgressKit-Swift.h"
-export *
-}
