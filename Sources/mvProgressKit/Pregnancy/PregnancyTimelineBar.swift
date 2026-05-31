@@ -26,10 +26,16 @@ public struct PregnancyBarData: Sendable {
 
     private static func fullPregnancy(_ input: PregnancyBarInput,
                                       _ palette: PregnancyPalette) -> PregnancyBarData {
+        // One fill, colored by the *current* trimester — the hue shifts as you
+        // cross into each trimester (cleaner + glass-friendly vs tricolor segments).
+        let tri: Int
+        switch input.phase {
+        case .first:  tri = 1
+        case .second: tri = 2
+        default:      tri = 3
+        }
         let segments = [
-            ProgressSegment(id: 0, fraction: 0.35, fill: .linear(palette.trimester1)),
-            ProgressSegment(id: 1, fraction: 0.35, fill: .linear(palette.trimester2)),
-            ProgressSegment(id: 2, fraction: 0.30, fill: .linear(palette.trimester3)),
+            ProgressSegment(id: 0, fraction: 1.0, fill: .linear(palette.trimesterGradient(tri)))
         ]
         let markers = [(12, 0.30), (20, 0.50), (28, 0.70), (36, 0.90)]
             .enumerated()
@@ -48,11 +54,12 @@ public struct PregnancyBarData: Sendable {
         // On-time span = weeks 37→40 across the full pill (overtime tears off).
         // Light tint behind the deep ramp keeps the unfilled track clean.
         let trackTint = palette.trimester1.first
-        let segments = (0..<3).map {
-            ProgressSegment(id: $0, fraction: 1.0 / 3.0,
-                            fill: .linear(palette.homeStretch[$0]),
-                            tint: trackTint)
-        }
+        // One fill spanning a subtle light→deep sweep of the home-stretch hue.
+        let hsRamp = [palette.homeStretch.first?.first, palette.homeStretch.last?.last].compactMap { $0 }
+        let hsFill: ProgressFill = hsRamp.count == 2 ? .linear(hsRamp) : .linear(palette.trimester3)
+        let segments = [
+            ProgressSegment(id: 0, fraction: 1.0, fill: hsFill, tint: trackTint)
+        ]
         let markers = [(37, 0.0), (38, 1.0 / 3.0), (39, 2.0 / 3.0), (40, 1.0)]
             .enumerated()
             .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }

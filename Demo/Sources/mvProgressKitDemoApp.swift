@@ -51,6 +51,7 @@ enum DemoLaunch {
         var unfilled: UnfilledStyle
         var overtime: OvertimeStyle
         var glass: Bool
+        var indicator: PositionIndicator
         var chrome: Bool
     }
 
@@ -61,6 +62,14 @@ enum DemoLaunch {
             ? .neutral : .shade(lighten: 0.85, opacity: 0.3, base: showBase)
         let overtime: OvertimeStyle = d.string(forKey: "overtime") == "reserved"
             ? .reserved : .tear
+        let indicator: PositionIndicator
+        switch d.string(forKey: "indicator") {
+        case "heart":   indicator = .symbol("heart.fill")
+        case "diamond": indicator = .symbol("diamond.fill")
+        case "star":    indicator = .symbol("star.fill")
+        case "none":    indicator = .none
+        default:        indicator = .dot
+        }
         return State(
             screen: d.string(forKey: "screen").flatMap(DemoScreen.init(rawValue:)),
             week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : 24.5,
@@ -69,6 +78,7 @@ enum DemoLaunch {
             unfilled: unfilled,
             overtime: overtime,
             glass: d.object(forKey: "glass") != nil ? d.bool(forKey: "glass") : true,
+            indicator: indicator,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }

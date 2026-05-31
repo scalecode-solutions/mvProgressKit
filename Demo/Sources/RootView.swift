@@ -11,6 +11,7 @@ struct RootView: View {
     private let unfilled: UnfilledStyle
     private let overtimeStyle: OvertimeStyle
     private let useGlass: Bool
+    private let indicator: PositionIndicator
     private let showChrome: Bool
 
     init() {
@@ -22,6 +23,7 @@ struct RootView: View {
         unfilled = s.unfilled
         overtimeStyle = s.overtime
         useGlass = s.glass
+        indicator = s.indicator
         showChrome = s.chrome
     }
 
@@ -65,7 +67,7 @@ struct RootView: View {
             .navigationTitle("mvProgressKit")
             .navigationDestination(for: DemoScreen.self) { screen in
                 DetailPage(screen: screen, input: input, coloring: $coloring,
-                           style: style, overtimeStyle: overtimeStyle)
+                           style: style, overtimeStyle: overtimeStyle, indicator: indicator)
                     .navigationTitle(screen.title)
                     .navigationBarTitleDisplayMode(.inline)
             }

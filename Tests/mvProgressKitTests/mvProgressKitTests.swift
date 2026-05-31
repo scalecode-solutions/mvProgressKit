@@ -8,7 +8,7 @@ import Testing
     #expect(input.isLaborReady == false)
 
     let data = PregnancyBarData.make(for: input)
-    #expect(data.segments.count == 3)       // three trimesters
+    #expect(data.segments.count == 1)       // single current-trimester fill
     #expect(data.overtime == nil)           // no overtime before the home stretch
     #expect(abs(data.fillFraction - 0.5) < 0.0001)
 }
@@ -20,8 +20,8 @@ import Testing
     #expect(input.isLaborReady)
 
     let data = PregnancyBarData.make(for: input)
-    #expect(data.segments.count == 3)       // three week segments
-    #expect(data.overtime != nil)           // dormant overtime tail present
+    #expect(data.segments.count == 1)       // single home-stretch fill
+    #expect(data.overtime != nil)           // overtime config present
     #expect(data.overtime?.activeWeeks == 0)
 }
 

@@ -9,6 +9,11 @@ struct DetailPage: View {
     @Binding var coloring: RingColoring
     let style: ProgressStyle
     let overtimeStyle: OvertimeStyle
+    let indicator: PositionIndicator
+
+    private func withIndicator(_ base: ProgressOverlays) -> ProgressOverlays {
+        var o = base; o.indicator = indicator; return o
+    }
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
     private var deepFill: ProgressFill { .linear(palette.trimester3) }
@@ -39,9 +44,9 @@ struct DetailPage: View {
 
     private var timeline: some View {
         VStack(alignment: .leading, spacing: 24) {
-            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: .full, style: style, overtimeStyle: overtimeStyle) }
-            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: .full, style: style, overtimeStyle: overtimeStyle) }
-            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: .lean, style: style, overtimeStyle: overtimeStyle) }
+            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.full), style: style, overtimeStyle: overtimeStyle) }
+            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: withIndicator(.full), style: style, overtimeStyle: overtimeStyle) }
+            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.lean), style: style, overtimeStyle: overtimeStyle) }
             labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style, overtimeStyle: overtimeStyle) }
         }
     }
@@ -79,7 +84,7 @@ struct DetailPage: View {
                 fillFraction: demoFraction,
                 size: .standard,
                 style: style,
-                overlays: ProgressOverlays(valueLabel: false, positionDot: true,
+                overlays: ProgressOverlays(valueLabel: false, indicator: indicator,
                                            glow: true, markers: true, dividers: true)
             )
         }

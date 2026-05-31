@@ -86,7 +86,7 @@ public struct SegmentedBar: View {
     @ViewBuilder
     private func overlayLayer(width: CGFloat) -> some View {
         if overlays.markers { markerTicks(width: width) }
-        if overlays.positionDot { positionDot(width: width) }
+        positionIndicator(width: width)
         if overlays.valueLabel, let valueText { valueLabelView(valueText) }
     }
 
@@ -248,15 +248,28 @@ public struct SegmentedBar: View {
     }
 
     @ViewBuilder
-    private func positionDot(width: CGFloat) -> some View {
-        if fill > 0.02 && fill < 0.98 {
-            Circle()
-                .fill(Color.white)
-                .frame(width: size.dotSize, height: size.dotSize)
+    private func positionIndicator(width: CGFloat) -> some View {
+        if fill > 0.02 && fill < 0.98, overlays.indicator != .none {
+            indicatorContent
+                .frame(width: size.height, height: size.height)
                 .shadow(color: fillColor.opacity(0.5), radius: size.dotSize / 3)
                 .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
-                .offset(x: width * fill - size.dotSize / 2)
+                .offset(x: width * fill - size.height / 2)
                 .modifier(AnimateFill(animation: style.animation, value: fill))
+        }
+    }
+
+    @ViewBuilder
+    private var indicatorContent: some View {
+        switch overlays.indicator {
+        case .none:
+            EmptyView()
+        case .dot:
+            Circle().fill(Color.white).frame(width: size.dotSize, height: size.dotSize)
+        case .symbol(let name):
+            Image(systemName: name)
+                .font(.system(size: size.height * 0.55, weight: .bold))
+                .foregroundStyle(.white)
         }
     }
 

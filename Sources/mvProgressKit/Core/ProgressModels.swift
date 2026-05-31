@@ -168,22 +168,31 @@ public struct OvertimeConfig: Equatable, Sendable {
 
 // MARK: - Overlays
 
+/// The "you are here" marker that rides the fill edge.
+public enum PositionIndicator: Sendable, Equatable {
+    case none
+    /// The default white circle.
+    case dot
+    /// Any SF Symbol, e.g. `"heart.fill"`, `"diamond.fill"`, `"star.fill"`.
+    case symbol(String)
+}
+
 /// Toggles for the chrome drawn on top of a track. Presets cover the common
 /// "everything", "lean", and "bare" cases; tweak individual flags as needed.
 public struct ProgressOverlays: Equatable, Sendable {
     public var valueLabel: Bool
-    public var positionDot: Bool
+    public var indicator: PositionIndicator
     public var glow: Bool
     public var markers: Bool
     public var dividers: Bool
 
     public init(valueLabel: Bool = true,
-                positionDot: Bool = true,
+                indicator: PositionIndicator = .dot,
                 glow: Bool = true,
                 markers: Bool = true,
                 dividers: Bool = true) {
         self.valueLabel = valueLabel
-        self.positionDot = positionDot
+        self.indicator = indicator
         self.glow = glow
         self.markers = markers
         self.dividers = dividers
@@ -191,10 +200,10 @@ public struct ProgressOverlays: Equatable, Sendable {
 
     /// Everything on (dashboard hero bar).
     public static let full = ProgressOverlays()
-    /// Lean: dot + glow, no pill/markers/dividers (Prep landing bar).
-    public static let lean = ProgressOverlays(valueLabel: false, positionDot: true,
+    /// Lean: indicator + glow, no pill/markers/dividers (Prep landing bar).
+    public static let lean = ProgressOverlays(valueLabel: false, indicator: .dot,
                                               glow: true, markers: false, dividers: false)
     /// Bare fill only (task-completion bars).
-    public static let bare = ProgressOverlays(valueLabel: false, positionDot: false,
+    public static let bare = ProgressOverlays(valueLabel: false, indicator: .none,
                                               glow: false, markers: false, dividers: false)
 }
