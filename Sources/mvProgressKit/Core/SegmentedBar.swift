@@ -64,6 +64,9 @@ public struct SegmentedBar: View {
                 track(width: w)
                 fillBar(width: w)
                     .modifier(AnimateFill(animation: style.animation, value: fill))
+                if let ot = overtime, fill > ot.dueAnchor {
+                    overtimeFill(ot, width: w)
+                }
                 if overlays.markers { markerTicks(width: w) }
                 if let ot = overtime { dueMarker(ot, width: w) }
                 if overlays.positionDot { positionDot(width: w) }
@@ -99,6 +102,20 @@ public struct SegmentedBar: View {
             }
             .frame(height: size.height)
             .clipShape(RoundedRectangle(cornerRadius: radius))
+
+            // Overtime zone — faint diagonal stripes mark the "bonus" territory
+            // beyond the Due anchor, so it reads as a distinct zone even empty.
+            if let ot = overtime {
+                HStack(spacing: 0) {
+                    Spacer().frame(width: width * ot.dueAnchor)
+                    DiagonalStripes(spacing: 7)
+                        .stroke(Color.white.opacity(0.10), lineWidth: 1.5)
+                        .frame(width: width * (1 - ot.dueAnchor))
+                    Spacer(minLength: 0)
+                }
+                .frame(height: size.height)
+                .clipShape(RoundedRectangle(cornerRadius: radius))
+            }
 
             // Dividers between segments
             if overlays.dividers {
@@ -157,12 +174,43 @@ public struct SegmentedBar: View {
         }
     }
 
+    /// Overtime fill — the portion past the Due anchor. Striped so it reads as
+    /// a distinct "bonus time" zone rather than just more fill.
+    @ViewBuilder
+    private func overtimeFill(_ ot: OvertimeConfig, width: CGFloat) -> some View {
+        let otColor = segments.last?.fill.leadColor ?? .accentColor
+        let bar = HStack(spacing: 0) {
+            Spacer().frame(width: width * ot.dueAnchor)
+            ZStack {
+                Rectangle().fill(otColor)
+                DiagonalStripes(spacing: 7)
+                    .stroke(Color.white.opacity(0.35), lineWidth: 2)
+            }
+            .frame(width: width * (fill - ot.dueAnchor))
+            Spacer(minLength: 0)
+        }
+        .frame(height: size.height)
+        .clipShape(RoundedRectangle(cornerRadius: radius))
+
+        ZStack {
+            if overlays.glow {
+                bar.blur(radius: size.glowBlur).opacity(size.glowOpacity)
+            }
+            bar
+        }
+        .modifier(AnimateFill(animation: style.animation, value: fill))
+    }
+
+    /// The Due line — the emotional "line." Bolder than a divider, with a
+    /// shadow so it reads clearly over both fill and track.
     @ViewBuilder
     private func dueMarker(_ ot: OvertimeConfig, width: CGFloat) -> some View {
+        let lineWidth = max(size.dividerWidth, 2.5)
         Rectangle()
-            .fill(Color.white.opacity(0.85))
-            .frame(width: size.dividerWidth, height: size.height)
-            .offset(x: width * ot.dueAnchor - size.dividerWidth / 2)
+            .fill(Color.white)
+            .frame(width: lineWidth, height: size.height)
+            .shadow(color: .black.opacity(0.5), radius: 2)
+            .offset(x: width * ot.dueAnchor - lineWidth / 2)
     }
 
     // MARK: Position dot
@@ -192,6 +240,21 @@ public struct SegmentedBar: View {
         .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
         .padding(.horizontal, size.horizontalPadding)
         .frame(height: size.height)
+    }
+}
+
+/// Diagonal hatch lines spanning a rect — the "overtime / bonus" texture.
+struct DiagonalStripes: Shape {
+    var spacing: CGFloat = 7
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        var x = -rect.height
+        while x < rect.width {
+            path.move(to: CGPoint(x: x, y: rect.height))
+            path.addLine(to: CGPoint(x: x + rect.height, y: 0))
+            x += spacing
+        }
+        return path
     }
 }
 

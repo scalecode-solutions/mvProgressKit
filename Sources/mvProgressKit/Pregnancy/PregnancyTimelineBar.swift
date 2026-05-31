@@ -45,8 +45,14 @@ public struct PregnancyBarData: Sendable {
     private static func homeStretch(_ input: PregnancyBarInput,
                                     _ palette: PregnancyPalette) -> PregnancyBarData {
         let segFrac = dueAnchor / 3.0
+        // Light tint behind the deep ramp — the deep home-stretch hues at low
+        // opacity read muddy on dark, so the track borrows the lightest gender
+        // shade for a clean unfilled look.
+        let trackTint = palette.trimester1.first
         let segments = (0..<3).map {
-            ProgressSegment(id: $0, fraction: segFrac, fill: .linear(palette.homeStretch[$0]))
+            ProgressSegment(id: $0, fraction: segFrac,
+                            fill: .linear(palette.homeStretch[$0]),
+                            tint: trackTint)
         }
         let markers = [(37, 0.0), (38, segFrac), (39, segFrac * 2), (40, dueAnchor)]
             .enumerated()
