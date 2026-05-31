@@ -177,33 +177,53 @@ public enum PositionIndicator: Sendable, Equatable {
     case symbol(String)
 }
 
-/// Toggles for the chrome drawn on top of a track. Presets cover the common
-/// "everything", "lean", and "bare" cases; tweak individual flags as needed.
+/// Where the value caption (days-to-go / week) sits.
+public enum CaptionPlacement: Sendable, Equatable {
+    case none
+    /// Leading, inside the bar (classic dashboard pill).
+    case inside
+    /// In a row above the bar — keeps the bar pristine (direction B).
+    case above
+}
+
+/// Toggles for the chrome around a track. Presets cover the common cases;
+/// tweak individual flags as needed.
 public struct ProgressOverlays: Equatable, Sendable {
-    public var valueLabel: Bool
+    public var caption: CaptionPlacement
     public var indicator: PositionIndicator
     public var glow: Bool
-    public var markers: Bool
+    /// Thin week/milestone ticks *inside* the bar.
+    public var markerTicks: Bool
+    /// Marker number labels *below* the bar (outside).
+    public var markerLabels: Bool
     public var dividers: Bool
 
-    public init(valueLabel: Bool = true,
+    public init(caption: CaptionPlacement = .inside,
                 indicator: PositionIndicator = .dot,
                 glow: Bool = true,
-                markers: Bool = true,
+                markerTicks: Bool = true,
+                markerLabels: Bool = false,
                 dividers: Bool = true) {
-        self.valueLabel = valueLabel
+        self.caption = caption
         self.indicator = indicator
         self.glow = glow
-        self.markers = markers
+        self.markerTicks = markerTicks
+        self.markerLabels = markerLabels
         self.dividers = dividers
     }
 
-    /// Everything on (dashboard hero bar).
+    /// Classic dashboard hero bar — caption inside, ticks, dividers.
     public static let full = ProgressOverlays()
-    /// Lean: indicator + glow, no pill/markers/dividers (Prep landing bar).
-    public static let lean = ProgressOverlays(valueLabel: false, indicator: .dot,
-                                              glow: true, markers: false, dividers: false)
+    /// Pristine bar — caption above, ticks inside + numbers below, no dividers (direction B).
+    public static let captioned = ProgressOverlays(caption: .above, indicator: .dot,
+                                                   glow: true, markerTicks: true,
+                                                   markerLabels: true, dividers: false)
+    /// Lean: indicator + glow only (Prep landing bar).
+    public static let lean = ProgressOverlays(caption: .none, indicator: .dot,
+                                              glow: true, markerTicks: false,
+                                              markerLabels: false, dividers: false)
     /// Bare fill only (task-completion bars).
-    public static let bare = ProgressOverlays(valueLabel: false, indicator: .none,
-                                              glow: false, markers: false, dividers: false)
+    public static let bare = ProgressOverlays(caption: .none, indicator: .none,
+                                              glow: false, markerTicks: false,
+                                              markerLabels: false, dividers: false)
 }

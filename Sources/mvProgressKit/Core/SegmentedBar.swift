@@ -1,19 +1,18 @@
 import SwiftUI
 
-/// The workhorse linear bar: proportional segments, optional markers, a
-/// position dot, a value label, a glow, and split-pill overtime.
-///
-/// Data-driven — `segments`/`markers` come from a factory (e.g. the Pregnancy
-/// layer), so this view knows nothing about trimesters or weeks. With
-/// `style.glass` the track + fill render as real Liquid Glass capsules inside a
-/// `GlassEffectContainer`; otherwise they're gradient/shade fills. Overlays
-/// (markers, dot, value) draw on top of either backing.
+/// The workhorse linear bar. Composes an optional caption row (above), the bar
+/// strip (track + fill + indicator + inside ticks, glass or gradient), and an
+/// optional marker-label row (below). Data-driven — `segments`/`markers` come
+/// from a factory; this view knows nothing about trimesters or weeks.
 public struct SegmentedBar: View {
     public var segments: [ProgressSegment]
     public var markers: [ProgressMarker]
     public var fillFraction: Double
     public var overtime: OvertimeConfig?
+    /// Leading caption / in-bar pill text.
     public var valueText: AttributedString?
+    /// Trailing caption text (used with `.above` placement, e.g. "Week 24").
+    public var trailingText: AttributedString?
     public var size: BarSize
     public var style: ProgressStyle
     public var overlays: ProgressOverlays
@@ -23,6 +22,7 @@ public struct SegmentedBar: View {
                 fillFraction: Double,
                 overtime: OvertimeConfig? = nil,
                 valueText: AttributedString? = nil,
+                trailingText: AttributedString? = nil,
                 size: BarSize = .standard,
                 style: ProgressStyle = .glass,
                 overlays: ProgressOverlays = .full) {
@@ -31,6 +31,7 @@ public struct SegmentedBar: View {
         self.fillFraction = fillFraction
         self.overtime = overtime
         self.valueText = valueText
+        self.trailingText = trailingText
         self.size = size
         self.style = style
         self.overlays = overlays
@@ -40,6 +41,7 @@ public struct SegmentedBar: View {
 
     private var radius: CGFloat { size.height / 2 }
     private var fill: Double { min(max(fillFraction, 0), 1) }
+    private var hasCaption: Bool { valueText != nil || trailingText != nil }
 
     private var offsets: [(seg: ProgressSegment, start: Double)] {
         var cum = 0.0
@@ -57,6 +59,27 @@ public struct SegmentedBar: View {
     }
 
     public var body: some View {
+        VStack(spacing: 4) {
+            if overlays.caption == .above, hasCaption { captionRow }
+            barStrip
+            if overlays.markerLabels, !markers.isEmpty { markerLabelRow }
+        }
+    }
+
+    // MARK: Caption row (above)
+
+    private var captionRow: some View {
+        HStack(spacing: 8) {
+            if let valueText { Text(valueText) }
+            Spacer(minLength: 0)
+            if let trailingText { Text(trailingText).foregroundStyle(.secondary) }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: Bar strip
+
+    private var barStrip: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let mainW = overtime?.resolvedMainWidth ?? 1.0
@@ -75,7 +98,9 @@ public struct SegmentedBar: View {
                         overtimeRegion(ot, width: otWidth).offset(x: otStart)
                     }
                 }
-                overlayLayer(width: mainPx)
+                if overlays.markerTicks { tickMarks(width: mainPx) }
+                positionIndicator(width: mainPx)
+                if overlays.caption == .inside, let valueText { valueLabelView(valueText) }
             }
             .frame(height: size.height)
             .animation(style.animation, value: mainW)
@@ -83,13 +108,22 @@ public struct SegmentedBar: View {
         .frame(height: size.height)
     }
 
-    // MARK: Overlays (markers / dot / value) — shared across backings
+    // MARK: Marker-label row (below)
 
-    @ViewBuilder
-    private func overlayLayer(width: CGFloat) -> some View {
-        if overlays.markers { markerTicks(width: width) }
-        positionIndicator(width: width)
-        if overlays.valueLabel, let valueText { valueLabelView(valueText) }
+    private var markerLabelRow: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            ForEach(markers) { marker in
+                if let label = marker.label {
+                    Text(label)
+                        .font(.system(size: size.markerFont + 1, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .fixedSize()
+                        .position(x: min(max(w * marker.position, 10), w - 10), y: 8)
+                }
+            }
+        }
+        .frame(height: 16)
     }
 
     // MARK: Liquid Glass backing
@@ -175,7 +209,7 @@ public struct SegmentedBar: View {
         )
     }
 
-    // MARK: Track + fill layers (standard)
+    // MARK: Track + fill (standard)
 
     private var showsBase: Bool {
         switch style.unfilled {
@@ -234,22 +268,15 @@ public struct SegmentedBar: View {
         }
     }
 
-    // MARK: Overlay pieces
+    // MARK: Inside overlays
 
     @ViewBuilder
-    private func markerTicks(width: CGFloat) -> some View {
+    private func tickMarks(width: CGFloat) -> some View {
         ForEach(markers) { marker in
-            VStack(spacing: 2) {
-                Rectangle()
-                    .fill(Color.white.opacity(0.4))
-                    .frame(width: 1, height: size.height * 0.4)
-                if let label = marker.label {
-                    Text(label)
-                        .font(.system(size: size.markerFont, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-            }
-            .offset(x: width * marker.position - 0.5)
+            Rectangle()
+                .fill(Color.white.opacity(0.4))
+                .frame(width: 1, height: size.height * 0.4)
+                .offset(x: width * marker.position - 0.5)
         }
     }
 

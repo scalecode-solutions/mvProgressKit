@@ -111,34 +111,60 @@ public struct PregnancyBarData: Sendable {
 /// The ergonomic call site: hand it pregnancy input, it picks the right preset
 /// (full-pregnancy vs home-stretch) off the week signal and renders. This is
 /// the live consumer Clingy's Prep tab will use.
+/// What the value caption shows.
+public enum TimelineLabel: Sendable, Equatable {
+    case none, days, week, both
+}
+
 public struct PregnancyTimelineBar: View {
     public var input: PregnancyBarInput
     public var size: BarSize
     public var overlays: ProgressOverlays
     public var style: ProgressStyle
     public var overtimeStyle: OvertimeStyle
+    public var label: TimelineLabel
 
     public init(input: PregnancyBarInput,
                 size: BarSize = .standard,
                 overlays: ProgressOverlays = .full,
                 style: ProgressStyle = .glass,
-                overtimeStyle: OvertimeStyle = .tear) {
+                overtimeStyle: OvertimeStyle = .tear,
+                label: TimelineLabel = .days) {
         self.input = input
         self.size = size
         self.overlays = overlays
         self.style = style
         self.overtimeStyle = overtimeStyle
+        self.label = label
     }
 
     public var body: some View {
         let data = PregnancyBarData.make(for: input, overtimeStyle: overtimeStyle)
-        SegmentedBar(segments: data.segments,
-                     markers: data.markers,
-                     fillFraction: data.fillFraction,
-                     overtime: data.overtime,
-                     valueText: data.valueText,
-                     size: size,
-                     style: style,
-                     overlays: overlays)
+        let days = data.valueText
+        let week = Self.weekText(input.completedWeeks)
+        let leading: AttributedString?
+        let trailing: AttributedString?
+        switch label {
+        case .none: (leading, trailing) = (nil, nil)
+        case .days: (leading, trailing) = (days, nil)
+        case .week: (leading, trailing) = (week, nil)
+        case .both: (leading, trailing) = (days, week)
+        }
+
+        return SegmentedBar(segments: data.segments,
+                            markers: data.markers,
+                            fillFraction: data.fillFraction,
+                            overtime: data.overtime,
+                            valueText: leading,
+                            trailingText: trailing,
+                            size: size,
+                            style: style,
+                            overlays: overlays)
+    }
+
+    static func weekText(_ week: Int) -> AttributedString {
+        var s = AttributedString("Week \(week)")
+        s.font = .system(size: 14, weight: .semibold)
+        return s
     }
 }

@@ -52,6 +52,7 @@ enum DemoLaunch {
         var overtime: OvertimeStyle
         var glass: Bool
         var indicator: PositionIndicator
+        var label: TimelineLabel
         var animate: Bool
         var chrome: Bool
     }
@@ -72,6 +73,13 @@ enum DemoLaunch {
         case "none":    indicator = .none
         default:        indicator = .dot
         }
+        let label: TimelineLabel
+        switch d.string(forKey: "label") {
+        case "week": label = .week
+        case "both": label = .both
+        case "none": label = .none
+        default:     label = .days
+        }
         return State(
             screen: d.string(forKey: "screen").flatMap(DemoScreen.init(rawValue:)),
             week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : (animate ? 39 : 24.5),
@@ -81,6 +89,7 @@ enum DemoLaunch {
             overtime: overtime,
             glass: d.object(forKey: "glass") != nil ? d.bool(forKey: "glass") : true,
             indicator: indicator,
+            label: label,
             animate: animate,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )

@@ -10,6 +10,7 @@ struct DetailPage: View {
     let style: ProgressStyle
     let overtimeStyle: OvertimeStyle
     let indicator: PositionIndicator
+    let label: TimelineLabel
 
     private func withIndicator(_ base: ProgressOverlays) -> ProgressOverlays {
         var o = base; o.indicator = indicator; return o
@@ -44,10 +45,11 @@ struct DetailPage: View {
 
     private var timeline: some View {
         VStack(alignment: .leading, spacing: 24) {
-            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.full), style: style, overtimeStyle: overtimeStyle) }
-            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: withIndicator(.full), style: style, overtimeStyle: overtimeStyle) }
-            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.lean), style: style, overtimeStyle: overtimeStyle) }
-            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style, overtimeStyle: overtimeStyle) }
+            labeled("standard · captioned (B)") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.captioned), style: style, overtimeStyle: overtimeStyle, label: label) }
+            labeled("compact · captioned") { PregnancyTimelineBar(input: input, size: .compact, overlays: withIndicator(.captioned), style: style, overtimeStyle: overtimeStyle, label: label) }
+            labeled("standard · inside (classic)") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.full), style: style, overtimeStyle: overtimeStyle, label: label) }
+            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: withIndicator(.lean), style: style, overtimeStyle: overtimeStyle, label: label) }
+            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style, overtimeStyle: overtimeStyle, label: .none) }
         }
     }
 
@@ -84,8 +86,9 @@ struct DetailPage: View {
                 fillFraction: demoFraction,
                 size: .standard,
                 style: style,
-                overlays: ProgressOverlays(valueLabel: false, indicator: indicator,
-                                           glow: true, markers: true, dividers: true)
+                overlays: ProgressOverlays(caption: .none, indicator: indicator,
+                                           glow: true, markerTicks: true,
+                                           markerLabels: false, dividers: true)
             )
         }
     }
