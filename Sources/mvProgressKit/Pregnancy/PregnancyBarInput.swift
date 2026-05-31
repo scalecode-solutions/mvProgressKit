@@ -74,6 +74,15 @@ public struct PregnancyBarInput: Equatable, Sendable {
         }
     }
 
+    /// Ordinal only ("1st/2nd/3rd") — smallest chip form.
+    public var trimesterOrdinal: String {
+        switch trimesterNumber {
+        case 1:  return "1st"
+        case 2:  return "2nd"
+        default: return "3rd"
+        }
+    }
+
     /// "37 weeks" / "37 weeks, 1 day".
     public var weekDayText: String {
         dayOfWeek > 0

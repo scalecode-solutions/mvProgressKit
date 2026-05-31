@@ -50,7 +50,14 @@ public struct PregnancyInfoCard: View {
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
     private var chipColor: Color { palette.trimesterLead(input.trimesterNumber) }
+    /// Full name for VoiceOver.
     private var trimester: String { trimesterText ?? input.trimesterNameShort }
+    /// Visible chip: standard shows just the ordinal ("3rd") to stay compact;
+    /// compact has room for the full "3rd Trimester".
+    private var chipText: String {
+        if let trimesterText { return trimesterText }
+        return style == .standard ? input.trimesterOrdinal : input.trimesterNameShort
+    }
 
     private func dueString(short: Bool) -> String {
         if let dueText { return dueText }
@@ -143,7 +150,7 @@ public struct PregnancyInfoCard: View {
     }
 
     private var chip: some View {
-        Text(trimester)
+        Text(chipText)
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
