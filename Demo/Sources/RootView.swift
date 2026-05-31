@@ -17,6 +17,7 @@ struct RootView: View {
     private let scheme: ColorScheme?
     private let daysText: String?
     private let showChrome: Bool
+    private let center: RingCenter
 
     init() {
         let s = DemoLaunch.initial()
@@ -33,6 +34,7 @@ struct RootView: View {
         scheme = s.scheme
         daysText = s.daysText
         showChrome = s.chrome
+        center = s.center
     }
 
     private var style: ProgressStyle {
@@ -77,7 +79,8 @@ struct RootView: View {
             .navigationDestination(for: DemoScreen.self) { screen in
                 DetailPage(screen: screen, input: input, coloring: $coloring,
                            style: style, overtimeStyle: overtimeStyle,
-                           indicator: indicator, label: label, daysText: daysText)
+                           indicator: indicator, label: label, daysText: daysText,
+                           center: center)
                     .navigationTitle(screen.title)
                     .navigationBarTitleDisplayMode(.inline)
             }

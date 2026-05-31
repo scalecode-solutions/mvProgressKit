@@ -47,6 +47,7 @@ public struct ProgressRing<Center: View>: View {
     public var trackColor: Color
     public var span: ArcSpan
     public var style: ProgressStyle
+    public var indicator: PositionIndicator
     public var center: () -> Center
 
     public init(fillFraction: Double,
@@ -55,6 +56,7 @@ public struct ProgressRing<Center: View>: View {
                 trackColor: Color = Color.gray.opacity(0.2),
                 span: ArcSpan = .full,
                 style: ProgressStyle = .glass,
+                indicator: PositionIndicator = .none,
                 @ViewBuilder center: @escaping () -> Center) {
         self.fillFraction = fillFraction
         self.fill = fill
@@ -62,6 +64,7 @@ public struct ProgressRing<Center: View>: View {
         self.trackColor = trackColor
         self.span = span
         self.style = style
+        self.indicator = indicator
         self.center = center
     }
 
@@ -84,8 +87,16 @@ public struct ProgressRing<Center: View>: View {
         }
     }
 
-    public var body: some View {
+    @ViewBuilder private var content: some View {
         if style.glass { glassBody } else { standardBody }
+    }
+
+    public var body: some View {
+        content.overlay(
+            RingHead(indicator: indicator, fraction: fraction, span: span,
+                     lineWidth: lineWidth, glowColor: fill.leadColor)
+                .modifier(AnimateRing(animation: effectiveAnimation, value: fraction))
+        )
     }
 
     private var standardBody: some View {
@@ -141,9 +152,63 @@ public extension ProgressRing where Center == EmptyView {
          lineWidth: CGFloat = 12,
          trackColor: Color = Color.gray.opacity(0.2),
          span: ArcSpan = .full,
-         style: ProgressStyle = .glass) {
+         style: ProgressStyle = .glass,
+         indicator: PositionIndicator = .none) {
         self.init(fillFraction: fillFraction, fill: fill, lineWidth: lineWidth,
-                  trackColor: trackColor, span: span, style: style) { EmptyView() }
+                  trackColor: trackColor, span: span, style: style,
+                  indicator: indicator) { EmptyView() }
+    }
+}
+
+/// The "you are here" head that rides a ring's leading edge — the radial cousin
+/// of `SegmentedBar`'s position indicator. Placed at the arc point
+/// `span.start + fraction·sweep`, with the same white-symbol + glow treatment.
+/// Shows through `fraction == 1` (the countdown heart lands at 12 o'clock at term).
+public struct RingHead: View {
+    public var indicator: PositionIndicator
+    public var fraction: Double
+    public var span: ArcSpan
+    public var lineWidth: CGFloat
+    public var glowColor: Color
+
+    public init(indicator: PositionIndicator, fraction: Double, span: ArcSpan,
+                lineWidth: CGFloat, glowColor: Color) {
+        self.indicator = indicator
+        self.fraction = fraction
+        self.span = span
+        self.lineWidth = lineWidth
+        self.glowColor = glowColor
+    }
+
+    public var body: some View {
+        if indicator != .none, fraction > 0.02 {
+            GeometryReader { geo in
+                let r = (min(geo.size.width, geo.size.height) - lineWidth) / 2
+                let sweep = span.end.degrees - span.start.degrees
+                let a = (span.start.degrees + min(max(fraction, 0), 1) * sweep) * .pi / 180
+                content
+                    .shadow(color: glowColor.opacity(0.5), radius: lineWidth / 3)
+                    .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                    .position(x: geo.size.width / 2 + r * cos(a),
+                              y: geo.size.height / 2 + r * sin(a))
+            }
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch indicator {
+        case .none:
+            EmptyView()
+        case .dot:
+            Circle()
+                .fill(Color.white)
+                .overlay(Circle().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5))
+                .frame(width: lineWidth * 1.1, height: lineWidth * 1.1)
+        case .symbol(let name):
+            Image(systemName: name)
+                .font(.system(size: lineWidth * 0.8, weight: .bold))
+                .foregroundStyle(.white)
+        }
     }
 }
 

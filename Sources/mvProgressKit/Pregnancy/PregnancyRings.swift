@@ -96,19 +96,22 @@ public struct PregnancyRings: View {
     public var style: ProgressStyle
     public var lineWidth: CGFloat
     public var spacing: CGFloat
+    public var center: RingCenter
 
     public init(input: PregnancyBarInput,
                 arrangement: RingArrangement = .containment,
                 coloring: RingColoring = .byRadius,
                 style: ProgressStyle = .shaded,
                 lineWidth: CGFloat = 12,
-                spacing: CGFloat = 4) {
+                spacing: CGFloat = 4,
+                center: RingCenter = .weeks) {
         self.input = input
         self.arrangement = arrangement
         self.coloring = coloring
         self.style = style
         self.lineWidth = lineWidth
         self.spacing = spacing
+        self.center = center
     }
 
     public var body: some View {
@@ -121,16 +124,9 @@ public struct PregnancyRings: View {
                                                          arrangement: arrangement,
                                                          coloring: coloring),
                           lineWidth: lineWidth, spacing: spacing, style: style)
-                VStack(spacing: 0) {
-                    Text("\(input.completedWeeks)")
-                        .font(.system(size: innerDiameter * 0.42, weight: .bold))
-                        .monospacedDigit()
-                    Text("weeks")
-                        .font(.system(size: innerDiameter * 0.16, weight: .medium))
-                        .foregroundStyle(.secondary)
+                if let c = center.content(for: input) {
+                    RingCenterLabel(value: c.value, caption: c.caption, diameter: innerDiameter)
                 }
-                .frame(width: innerDiameter)
-                .minimumScaleFactor(0.6)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(input.weekLabelText), \(input.daysSummary)")

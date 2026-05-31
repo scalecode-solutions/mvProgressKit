@@ -12,7 +12,7 @@ struct mvProgressKitDemoApp: App {
 
 /// The component screens. Raw values double as deep-link ids (`-screen rings`).
 enum DemoScreen: String, CaseIterable, Identifiable, Hashable {
-    case infoCard, timeline, rings, segmented, trackbar, steps, ring, gauge, multiring
+    case infoCard, timeline, rings, segmented, trackbar, steps, ring, gauge, multiring, segring, dial, ringhero
 
     var id: String { rawValue }
 
@@ -27,14 +27,17 @@ enum DemoScreen: String, CaseIterable, Identifiable, Hashable {
         case .ring:      return "Progress Ring"
         case .gauge:     return "Gauge"
         case .multiring: return "Multi Ring"
+        case .segring:   return "Segmented Ring"
+        case .dial:      return "Dial Rings"
+        case .ringhero:  return "Ring Hero Ideas"
         }
     }
 
     var family: String {
         switch self {
-        case .infoCard, .timeline, .rings:    return "Pregnancy"
+        case .infoCard, .timeline, .rings, .dial, .ringhero: return "Pregnancy"
         case .segmented, .trackbar, .steps:   return "Linear"
-        case .ring, .gauge, .multiring:       return "Radial"
+        case .ring, .gauge, .multiring, .segring: return "Radial"
         }
     }
 
@@ -58,6 +61,7 @@ enum DemoLaunch {
         var scheme: ColorScheme?
         var daysText: String?
         var chrome: Bool
+        var center: RingCenter
     }
 
     static func initial() -> State {
@@ -89,6 +93,13 @@ enum DemoLaunch {
         case "none": label = .none
         default:     label = .days
         }
+        let center: RingCenter
+        switch d.string(forKey: "center") {
+        case "days":    center = .daysToDue
+        case "percent": center = .percent
+        case "none":    center = .none
+        default:        center = .weeks
+        }
         return State(
             screen: d.string(forKey: "screen").flatMap(DemoScreen.init(rawValue:)),
             week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : (animate ? 39 : 24.5),
@@ -102,7 +113,8 @@ enum DemoLaunch {
             animate: animate,
             scheme: scheme,
             daysText: d.string(forKey: "daystext"),
-            chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
+            chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true,
+            center: center
         )
     }
 }
