@@ -41,9 +41,13 @@ public struct PregnancyBarData: Sendable {
         let segments = [
             ProgressSegment(id: 0, fraction: 1.0, fill: .linear(palette.trimesterGradient(tri)))
         ]
-        let markers = [(12, 0.30), (20, 0.50), (28, 0.70), (36, 0.90)]
+        // Milestone weeks, every +8: 4 (found out), 12, 20 (anatomy scan), 28
+        // (3rd tri), 36. Positions derived from week/40 so they align with fill.
+        let markers = [4, 12, 20, 28, 36]
             .enumerated()
-            .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }
+            .map { (i, wk) in
+                ProgressMarker(id: i, position: Double(wk) / 40.0, label: "\(wk)")
+            }
         // Derive fill from the true week position (week/40) so the dot lands on
         // its week mark regardless of how the host computes progressPercent.
         let fill = min(max(input.weeksContinuous / 40.0, 0), 1)
