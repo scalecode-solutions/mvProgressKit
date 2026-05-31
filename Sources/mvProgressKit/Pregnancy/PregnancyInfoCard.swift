@@ -40,7 +40,7 @@ public struct PregnancyInfoCard: View {
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
     private var chipColor: Color { palette.trimesterLead(input.trimesterNumber) }
-    private var trimester: String { trimesterText ?? input.trimesterName }
+    private var trimester: String { trimesterText ?? input.trimesterNameShort }
 
     private func dueString(short: Bool) -> String {
         if let dueText { return dueText }
@@ -68,14 +68,10 @@ public struct PregnancyInfoCard: View {
 
     private var standard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("You are \(weekText ?? input.weekDayText) along!")
-                    .font(.system(size: 22, weight: .bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 8)
-                chip
-            }
+            Text("You are \(weekText ?? input.weekDayText) along!")
+                .font(.system(size: 22, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             HStack(spacing: 6) {
                 Image(systemName: "calendar")
                     .font(.system(size: 14, weight: .medium))
@@ -83,6 +79,10 @@ public struct PregnancyInfoCard: View {
                 Text("Due \(dueString(short: false)) · \(daysString)")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 8)
+                chip
             }
             PregnancyTimelineBar(
                 input: input,

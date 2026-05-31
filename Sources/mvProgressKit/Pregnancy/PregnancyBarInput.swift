@@ -68,6 +68,15 @@ public struct PregnancyBarInput: Equatable, Sendable {
         }
     }
 
+    /// Compact ordinal form for chips ("1st/2nd/3rd Trimester").
+    public var trimesterNameShort: String {
+        switch trimesterNumber {
+        case 1:  return "1st Trimester"
+        case 2:  return "2nd Trimester"
+        default: return "3rd Trimester"
+        }
+    }
+
     /// "37 weeks" / "37 weeks, 1 day".
     public var weekDayText: String {
         dayOfWeek > 0
