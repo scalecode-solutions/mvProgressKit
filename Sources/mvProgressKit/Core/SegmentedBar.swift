@@ -128,14 +128,25 @@ public struct SegmentedBar: View {
 
     // MARK: Layers
 
+    /// Whether the material/color base renders behind the tints. Always on for
+    /// neutral; for shade it follows the `base` flag (off = airy/translucent).
+    private var showsBase: Bool {
+        switch style.unfilled {
+        case .neutral:               return true
+        case .shade(_, _, let base): return base
+        }
+    }
+
     @ViewBuilder
     private func trackLayer(width: CGFloat) -> some View {
         ZStack(alignment: .leading) {
-            Group {
-                if style.glassTrack {
-                    Rectangle().fill(.ultraThinMaterial)
-                } else {
-                    Rectangle().fill(style.trackColor)
+            if showsBase {
+                Group {
+                    if style.glassTrack {
+                        Rectangle().fill(.ultraThinMaterial)
+                    } else {
+                        Rectangle().fill(style.trackColor)
+                    }
                 }
             }
             HStack(spacing: 0) {
@@ -223,7 +234,7 @@ public struct SegmentedBar: View {
         switch style.unfilled {
         case .neutral:
             return AnyShapeStyle((tint ?? fill.leadColor).opacity(0.15))
-        case .shade(let lighten, let opacity):
+        case .shade(let lighten, let opacity, _):
             return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).linearStyle())
         }
     }

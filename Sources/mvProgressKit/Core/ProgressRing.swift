@@ -73,7 +73,7 @@ public struct ProgressRing<Center: View>: View {
         switch style.unfilled {
         case .neutral:
             return AnyShapeStyle(trackColor)
-        case .shade(let lighten, let opacity):
+        case .shade(let lighten, let opacity, _):
             return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).radialStyle())
         }
     }

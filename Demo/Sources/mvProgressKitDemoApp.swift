@@ -55,8 +55,9 @@ enum DemoLaunch {
 
     static func initial() -> State {
         let d = UserDefaults.standard
+        let showBase = d.object(forKey: "base") != nil ? d.bool(forKey: "base") : false
         let unfilled: UnfilledStyle = d.string(forKey: "unfilled") == "neutral"
-            ? .neutral : .shade(lighten: 0.85, opacity: 0.3)
+            ? .neutral : .shade(lighten: 0.85, opacity: 0.3, base: showBase)
         let overtime: OvertimeStyle = d.string(forKey: "overtime") == "reserved"
             ? .reserved : .tear
         return State(

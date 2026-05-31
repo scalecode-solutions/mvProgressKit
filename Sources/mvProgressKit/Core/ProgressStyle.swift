@@ -56,7 +56,9 @@ public enum UnfilledStyle: Sendable, Equatable {
     case neutral
     /// A faint gradient ghost of the *fill*: each stop blended toward white by
     /// `lighten` (0→fill, 1→white), then dropped to `opacity`. Airy + see-through.
-    case shade(lighten: Double, opacity: Double)
+    /// `base` shows/hides the material/track base behind the ghost — `false`
+    /// gives a fully translucent, baseless track (matches the rings).
+    case shade(lighten: Double, opacity: Double, base: Bool)
 }
 
 // MARK: - Shared style tokens
