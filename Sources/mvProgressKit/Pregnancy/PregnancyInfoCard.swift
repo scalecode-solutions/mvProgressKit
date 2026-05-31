@@ -78,13 +78,13 @@ public struct PregnancyInfoCard: View {
 
     private var standard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Fit-to-width: huge base + tiny min scale + single line makes the
-            // title span the full card edge-to-edge, sizing dynamically to the
-            // string length.
+            // Fixed size that only scales DOWN for long strings (like the
+            // original info card) — so "39 weeks along" (no day) stays the same
+            // size as "39 weeks, 3 days along" instead of ballooning to fill.
             Text("You are \(weekText ?? input.weekDayText) along!")
-                .font(.system(size: 200, weight: .bold))
+                .font(.system(size: 24, weight: .bold))
                 .lineLimit(1)
-                .minimumScaleFactor(0.05)
+                .minimumScaleFactor(0.65)
                 .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 6) {
                 Image(systemName: "calendar")
