@@ -159,7 +159,7 @@ private struct CardSurface: ViewModifier {
             content
                 .padding(16)
                 .background(RoundedRectangle(cornerRadius: 20).fill(.regularMaterial))
-                .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.white.opacity(0.06)))
+                .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.primary.opacity(0.08)))
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 2)
         }
     }

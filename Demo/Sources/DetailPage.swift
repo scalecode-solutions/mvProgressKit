@@ -39,7 +39,7 @@ struct DetailPage: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color.black.opacity(0.92))
+        .background(Color(uiColor: .systemBackground))
     }
 
     // MARK: Pages

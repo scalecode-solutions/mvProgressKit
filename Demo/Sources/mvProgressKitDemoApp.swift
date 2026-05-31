@@ -55,12 +55,19 @@ enum DemoLaunch {
         var indicator: PositionIndicator
         var label: TimelineLabel
         var animate: Bool
+        var scheme: ColorScheme?
         var chrome: Bool
     }
 
     static func initial() -> State {
         let d = UserDefaults.standard
         let animate = d.bool(forKey: "animate")
+        let scheme: ColorScheme?
+        switch d.string(forKey: "scheme") {
+        case "light":  scheme = .light
+        case "system": scheme = nil
+        default:       scheme = .dark
+        }
         let showBase = d.object(forKey: "base") != nil ? d.bool(forKey: "base") : false
         let unfilled: UnfilledStyle = d.string(forKey: "unfilled") == "neutral"
             ? .neutral : .shade(lighten: 0.85, opacity: 0.3, base: showBase)
@@ -92,6 +99,7 @@ enum DemoLaunch {
             indicator: indicator,
             label: label,
             animate: animate,
+            scheme: scheme,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }

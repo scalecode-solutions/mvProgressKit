@@ -14,6 +14,7 @@ struct RootView: View {
     private let indicator: PositionIndicator
     private let label: TimelineLabel
     private let useAnimate: Bool
+    private let scheme: ColorScheme?
     private let showChrome: Bool
 
     init() {
@@ -28,6 +29,7 @@ struct RootView: View {
         indicator = s.indicator
         label = s.label
         useAnimate = s.animate
+        scheme = s.scheme
         showChrome = s.chrome
     }
 
@@ -79,7 +81,7 @@ struct RootView: View {
                     .navigationBarTitleDisplayMode(.inline)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(scheme)
         .safeAreaInset(edge: .bottom) {
             if showChrome { footer }
         }

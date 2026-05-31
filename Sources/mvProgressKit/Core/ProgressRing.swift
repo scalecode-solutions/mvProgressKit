@@ -65,16 +65,19 @@ public struct ProgressRing<Center: View>: View {
         self.center = center
     }
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private var fraction: Double { min(max(fillFraction, 0), 1) }
     private var stroke: StrokeStyle { StrokeStyle(lineWidth: lineWidth, lineCap: style.lineCap) }
 
-    /// Track paint: neutral color, or a light shade of the fill.
+    /// Track paint: neutral color, or a light shade of the fill (theme-aware).
     private var resolvedTrack: AnyShapeStyle {
         switch style.unfilled {
         case .neutral:
             return AnyShapeStyle(trackColor)
         case .shade(let lighten, let opacity, _):
-            return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).radialStyle())
+            let l = colorScheme == .dark ? lighten : lighten * 0.45
+            return AnyShapeStyle(fill.track(lighten: l, opacity: opacity).radialStyle())
         }
     }
 

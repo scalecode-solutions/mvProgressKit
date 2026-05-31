@@ -42,6 +42,7 @@ public struct SegmentedBar: View {
     }
 
     @Namespace private var glassNS
+    @Environment(\.colorScheme) private var colorScheme
 
     private var radius: CGFloat { size.height / 2 }
     private var fill: Double { min(max(fillFraction, 0), 1) }
@@ -265,7 +266,7 @@ public struct SegmentedBar: View {
             if overlays.dividers {
                 ForEach(offsets.dropFirst().map { $0.start }, id: \.self) { boundary in
                     Rectangle()
-                        .fill(Color.white.opacity(0.6))
+                        .fill(Color.primary.opacity(0.5))
                         .frame(width: size.dividerWidth, height: size.height)
                         .offset(x: width * boundary - size.dividerWidth / 2)
                 }
@@ -309,7 +310,7 @@ public struct SegmentedBar: View {
 
     private var tick: some View {
         Rectangle()
-            .fill(Color.white.opacity(0.4))
+            .fill(Color.primary.opacity(0.4))
             .frame(width: 1, height: size.height * 0.4)
     }
 
@@ -331,7 +332,10 @@ public struct SegmentedBar: View {
         case .none:
             EmptyView()
         case .dot:
-            Circle().fill(Color.white).frame(width: size.dotSize, height: size.dotSize)
+            Circle()
+                .fill(Color.white)
+                .overlay(Circle().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5))
+                .frame(width: size.dotSize, height: size.dotSize)
         case .symbol(let name):
             Image(systemName: name)
                 .font(.system(size: size.height * 0.55, weight: .bold))
@@ -357,7 +361,11 @@ public struct SegmentedBar: View {
         case .neutral:
             return AnyShapeStyle((tint ?? fill.leadColor).opacity(0.15))
         case .shade(let lighten, let opacity, _):
-            return AnyShapeStyle(fill.track(lighten: lighten, opacity: opacity).linearStyle())
+            // Dark: lighten the fill toward white (a bright ghost on black).
+            // Light: lighten far less so the fill's own hue shows as a pale
+            // tint on white (lightening to white would vanish on a white bg).
+            let l = colorScheme == .dark ? lighten : lighten * 0.45
+            return AnyShapeStyle(fill.track(lighten: l, opacity: opacity).linearStyle())
         }
     }
 }
