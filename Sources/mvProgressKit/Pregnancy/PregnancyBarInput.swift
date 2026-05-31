@@ -29,22 +29,54 @@ public struct PregnancyBarInput: Equatable, Sendable {
     public var daysUntilDue: Int       // negative when overdue
     public var progressPercent: Double // 0...100 across the full ~280-day span
     public var gender: Gender
+    public var dueDate: Date?          // for "Due {date}" on the info card
 
     public init(completedWeeks: Int,
                 currentWeek: Int,
                 dayOfWeek: Int,
                 daysUntilDue: Int,
                 progressPercent: Double,
-                gender: Gender) {
+                gender: Gender,
+                dueDate: Date? = nil) {
         self.completedWeeks = completedWeeks
         self.currentWeek = currentWeek
         self.dayOfWeek = dayOfWeek
         self.daysUntilDue = daysUntilDue
         self.progressPercent = progressPercent
         self.gender = gender
+        self.dueDate = dueDate
     }
 
     public var phase: PregnancyPhase { .phase(forCompletedWeeks: completedWeeks) }
     public var isLaborReady: Bool { phase == .laborReady }
     public var isOverdue: Bool { daysUntilDue < 0 }
+
+    /// Medical trimester number (1/2/3) — labor-ready weeks are still 3rd.
+    public var trimesterNumber: Int {
+        switch completedWeeks {
+        case ..<14:   return 1
+        case 14..<28: return 2
+        default:      return 3
+        }
+    }
+
+    public var trimesterName: String {
+        switch trimesterNumber {
+        case 1:  return "First Trimester"
+        case 2:  return "Second Trimester"
+        default: return "Third Trimester"
+        }
+    }
+
+    /// "37 weeks" / "37 weeks, 1 day".
+    public var weekDayText: String {
+        dayOfWeek > 0
+            ? "\(completedWeeks) weeks, \(dayOfWeek) day\(dayOfWeek == 1 ? "" : "s")"
+            : "\(completedWeeks) weeks"
+    }
+
+    /// "Week 37" / "Week 37, Day 1".
+    public var weekLabelText: String {
+        dayOfWeek > 0 ? "Week \(completedWeeks), Day \(dayOfWeek)" : "Week \(completedWeeks)"
+    }
 }

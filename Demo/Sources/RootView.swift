@@ -38,13 +38,15 @@ struct RootView: View {
     }
 
     private var input: PregnancyBarInput {
-        PregnancyBarInput(
+        let days = Int((40.0 - week) * 7)
+        return PregnancyBarInput(
             completedWeeks: Int(week),
             currentWeek: Int(week) + 1,
             dayOfWeek: Int((week - Double(Int(week))) * 7),
-            daysUntilDue: Int((40.0 - week) * 7),
+            daysUntilDue: days,
             progressPercent: min(week / 40.0 * 100.0, 100),
-            gender: gender
+            gender: gender,
+            dueDate: Calendar.current.date(byAdding: .day, value: days, to: Date())
         )
     }
 

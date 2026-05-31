@@ -12,12 +12,13 @@ struct mvProgressKitDemoApp: App {
 
 /// The component screens. Raw values double as deep-link ids (`-screen rings`).
 enum DemoScreen: String, CaseIterable, Identifiable, Hashable {
-    case timeline, rings, segmented, trackbar, steps, ring, gauge, multiring
+    case infoCard, timeline, rings, segmented, trackbar, steps, ring, gauge, multiring
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
+        case .infoCard:  return "Info Card"
         case .timeline:  return "Timeline Bar"
         case .rings:     return "Pregnancy Rings"
         case .segmented: return "Segmented Bar (raw)"
@@ -31,7 +32,7 @@ enum DemoScreen: String, CaseIterable, Identifiable, Hashable {
 
     var family: String {
         switch self {
-        case .timeline, .rings:               return "Pregnancy"
+        case .infoCard, .timeline, .rings:    return "Pregnancy"
         case .segmented, .trackbar, .steps:   return "Linear"
         case .ring, .gauge, .multiring:       return "Radial"
         }

@@ -25,6 +25,7 @@ struct DetailPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 switch screen {
+                case .infoCard:  infoCard
                 case .timeline:  timeline
                 case .rings:     rings
                 case .segmented: segmented
@@ -42,6 +43,25 @@ struct DetailPage: View {
     }
 
     // MARK: Pages
+
+    private var infoCard: some View {
+        VStack(alignment: .leading, spacing: 28) {
+            labeled("standard") {
+                PregnancyInfoCard(input: input, style: .standard, barStyle: style,
+                                  overtimeStyle: overtimeStyle, indicator: indicator)
+                    .padding(16)
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+            labeled("compact") {
+                PregnancyInfoCard(input: input, style: .compact, barStyle: style,
+                                  overtimeStyle: overtimeStyle, indicator: indicator)
+                    .padding(16)
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+        }
+    }
 
     private var timeline: some View {
         VStack(alignment: .leading, spacing: 24) {
