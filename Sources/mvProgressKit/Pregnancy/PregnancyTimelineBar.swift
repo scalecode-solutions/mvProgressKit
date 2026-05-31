@@ -116,9 +116,9 @@ public struct PregnancyBarData: Sendable {
             s.font = .system(size: 13, weight: .bold)
             return s
         } else {
-            var count = AttributedString("+\(-days)")
+            var count = AttributedString("\(-days)")
             count.font = .system(size: 14, weight: .bold)
-            var unit = AttributedString(" days")
+            var unit = AttributedString(" days overdue")
             unit.font = .system(size: 12, weight: .medium)
             return count + unit
         }
