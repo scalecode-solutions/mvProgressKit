@@ -14,7 +14,7 @@ struct GalleryView: View {
         PregnancyBarInput(
             completedWeeks: Int(week),
             currentWeek: Int(week) + 1,
-            dayOfWeek: 0,
+            dayOfWeek: Int((week - Double(Int(week))) * 7),
             daysUntilDue: Int((40.0 - week) * 7),
             progressPercent: min(week / 40.0 * 100.0, 100),
             gender: gender
@@ -48,6 +48,14 @@ struct GalleryView: View {
                 }
                 section("PregnancyTimelineBar — lean (Prep landing)") {
                     PregnancyTimelineBar(input: input, size: .standard, overlays: .lean)
+                }
+                section("PregnancyRings — nested: pregnancy · phase · week") {
+                    HStack {
+                        Spacer()
+                        PregnancyRings(input: input, lineWidth: 14, spacing: 5)
+                            .frame(width: 170, height: 170)
+                        Spacer()
+                    }
                 }
                 section("TrackBar — task completion") {
                     TrackBar(fillFraction: taskFill, fill: deepFill, size: .compact)
@@ -97,7 +105,7 @@ struct GalleryView: View {
                     .font(.subheadline)
                     .foregroundStyle(input.isLaborReady ? .pink : .secondary)
             }
-            Slider(value: $week, in: 0...44, step: 1)
+            Slider(value: $week, in: 0...44)
             Picker("Gender", selection: $gender) {
                 Text("Girl").tag(Gender.girl)
                 Text("Boy").tag(Gender.boy)
