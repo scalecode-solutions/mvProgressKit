@@ -85,4 +85,14 @@ public struct PregnancyBarInput: Equatable, Sendable {
     public var weekLabelText: String {
         dayOfWeek > 0 ? "Week \(completedWeeks), Day \(dayOfWeek)" : "Week \(completedWeeks)"
     }
+
+    /// Continuous week position (e.g. 37.57), for alignment math.
+    public var weeksContinuous: Double { Double(completedWeeks) + Double(dayOfWeek) / 7.0 }
+
+    /// Plain countdown phrase — shared by the info card and accessibility.
+    public var daysSummary: String {
+        if daysUntilDue > 0 { return "\(daysUntilDue) days to go" }
+        if daysUntilDue == 0 { return "Due today" }
+        return "\(-daysUntilDue) days overdue"
+    }
 }

@@ -105,6 +105,10 @@ public struct ProgressStyle: Sendable {
     public static let glass = ProgressStyle()
     /// Flat (non-material) track — cheaper, good for small/task bars.
     public static let flat = ProgressStyle(glassTrack: false)
+    /// Airy light-shade track (a pale ghost of the fill) — a nicer default than
+    /// a flat gray track, especially for rings.
+    public static let shaded = ProgressStyle(glassTrack: false,
+                                             unfilled: .shade(lighten: 0.85, opacity: 0.3, base: false))
     /// Real Liquid Glass track + fill.
     public static let liquidGlass = ProgressStyle(glass: true)
 }

@@ -60,13 +60,7 @@ public struct PregnancyInfoCard: View {
         return f.string(from: due)
     }
 
-    private var daysString: String {
-        if let daysText { return daysText }
-        let d = input.daysUntilDue
-        if d > 0 { return "\(d) days to go" }
-        if d == 0 { return "Due today" }
-        return "\(-d) days overdue"
-    }
+    private var daysString: String { daysText ?? input.daysSummary }
 
     public var body: some View {
         Group {
@@ -76,6 +70,12 @@ public struct PregnancyInfoCard: View {
             }
         }
         .modifier(CardSurface(chrome: chrome))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(a11yLabel)
+    }
+
+    private var a11yLabel: String {
+        "You are \(weekText ?? input.weekDayText) along. Due \(dueString(short: false)). \(daysString). \(trimester)."
     }
 
     // MARK: Standard

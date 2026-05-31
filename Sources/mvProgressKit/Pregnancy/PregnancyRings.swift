@@ -100,7 +100,7 @@ public struct PregnancyRings: View {
     public init(input: PregnancyBarInput,
                 arrangement: RingArrangement = .containment,
                 coloring: RingColoring = .byRadius,
-                style: ProgressStyle = .glass,
+                style: ProgressStyle = .shaded,
                 lineWidth: CGFloat = 12,
                 spacing: CGFloat = 4) {
         self.input = input
@@ -132,6 +132,8 @@ public struct PregnancyRings: View {
                 .frame(width: innerDiameter)
                 .minimumScaleFactor(0.6)
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(input.weekLabelText), \(input.daysSummary)")
         }
     }
 }

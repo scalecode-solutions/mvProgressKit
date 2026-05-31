@@ -66,6 +66,9 @@ public struct ProgressRing<Center: View>: View {
     }
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var effectiveAnimation: Animation? { reduceMotion ? nil : style.animation }
 
     private var fraction: Double { min(max(fillFraction, 0), 1) }
     private var stroke: StrokeStyle { StrokeStyle(lineWidth: lineWidth, lineCap: style.lineCap) }
@@ -92,7 +95,7 @@ public struct ProgressRing<Center: View>: View {
             ArcShape(span: span, lineWidth: lineWidth)
                 .trim(from: 0, to: fraction)
                 .stroke(fill.radialStyle(), style: stroke)
-                .modifier(AnimateRing(animation: style.animation, value: fraction))
+                .modifier(AnimateRing(animation: effectiveAnimation, value: fraction))
             center()
         }
     }
@@ -107,7 +110,7 @@ public struct ProgressRing<Center: View>: View {
                 Color.clear
                     .glassEffect(.regular.tint(fill.leadColor),
                                  in: RingBand(span: span, lineWidth: lineWidth, fraction: fraction))
-                    .modifier(AnimateRing(animation: style.animation, value: fraction))
+                    .modifier(AnimateRing(animation: effectiveAnimation, value: fraction))
                 center()
             }
         }

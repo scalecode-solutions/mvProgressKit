@@ -43,6 +43,10 @@ public struct SegmentedBar: View {
 
     @Namespace private var glassNS
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// Honors Reduce Motion — no animated transitions when it's on.
+    private var effectiveAnimation: Animation? { reduceMotion ? nil : style.animation }
 
     private var radius: CGFloat { size.height / 2 }
     private var fill: Double { min(max(fillFraction, 0), 1) }
@@ -110,7 +114,7 @@ public struct SegmentedBar: View {
                 if overlays.caption == .inside, let valueText { valueLabelView(valueText) }
             }
             .frame(height: size.height)
-            .animation(style.animation, value: mainW)
+            .animation(effectiveAnimation, value: mainW)
         }
         .frame(height: size.height)
     }
@@ -170,8 +174,8 @@ public struct SegmentedBar: View {
                 }
             }
         }
-        .animation(style.animation, value: showOT)
-        .modifier(AnimateFill(animation: style.animation, value: fill))
+        .animation(effectiveAnimation, value: showOT)
+        .modifier(AnimateFill(animation: effectiveAnimation, value: fill))
     }
 
     @ViewBuilder
@@ -199,7 +203,7 @@ public struct SegmentedBar: View {
         ZStack(alignment: .leading) {
             trackLayer(width: width).clipShape(shape)
             fillLayer(width: width).clipShape(shape)
-                .modifier(AnimateFill(animation: style.animation, value: fill))
+                .modifier(AnimateFill(animation: effectiveAnimation, value: fill))
         }
         .frame(width: width, height: size.height, alignment: .leading)
     }
@@ -223,7 +227,7 @@ public struct SegmentedBar: View {
             .clipShape(shape)
         }
         .frame(width: width, height: size.height, alignment: .leading)
-        .modifier(AnimateFill(animation: style.animation, value: ot.fraction))
+        .modifier(AnimateFill(animation: effectiveAnimation, value: ot.fraction))
     }
 
     private func pill(left: Bool, right: Bool) -> UnevenRoundedRectangle {
@@ -322,7 +326,7 @@ public struct SegmentedBar: View {
                 .shadow(color: fillColor.opacity(0.5), radius: size.dotSize / 3)
                 .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
                 .offset(x: width * fill - size.height / 2)
-                .modifier(AnimateFill(animation: style.animation, value: fill))
+                .modifier(AnimateFill(animation: effectiveAnimation, value: fill))
         }
     }
 

@@ -44,7 +44,9 @@ public struct PregnancyBarData: Sendable {
         let markers = [(12, 0.30), (20, 0.50), (28, 0.70), (36, 0.90)]
             .enumerated()
             .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }
-        let fill = min(max(input.progressPercent / 100.0, 0), 1)
+        // Derive fill from the true week position (week/40) so the dot lands on
+        // its week mark regardless of how the host computes progressPercent.
+        let fill = min(max(input.weeksContinuous / 40.0, 0), 1)
         return PregnancyBarData(segments: segments, markers: markers,
                                 fillFraction: fill, overtime: nil,
                                 valueText: daysValue(input.daysUntilDue))
@@ -82,8 +84,7 @@ public struct PregnancyBarData: Sendable {
 
         // Fill from the true week position within 36→40 — no offset, so the
         // indicator aligns exactly with the week marks.
-        let weeks = Double(input.completedWeeks) + Double(input.dayOfWeek) / 7.0
-        var fill = min(max((weeks - homeStretchStartWeek) / span, 0), 1)
+        var fill = min(max((input.weeksContinuous - homeStretchStartWeek) / span, 0), 1)
         var overtime = OvertimeConfig(fraction: 0, activeWeeks: 0, style: overtimeStyle)
 
         if input.isOverdue {
@@ -181,6 +182,8 @@ public struct PregnancyTimelineBar: View {
                             size: size,
                             style: style,
                             overlays: overlays)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("\(input.weekLabelText), \(daysTextOverride ?? input.daysSummary)"))
     }
 
     static func weekText(_ week: Int) -> AttributedString {
