@@ -12,15 +12,17 @@ public struct PregnancyBarData: Sendable {
     public var overtime: OvertimeConfig?
     public var valueText: AttributedString
 
-    /// Home-stretch geometry constants.
-    static let homeStretchWindowDays = 21.0   // weeks 37→40
-    static let maxOvertimeDays = 14.0    // cap at 42 weeks
+    /// Home-stretch geometry constants. Window starts a week before the home
+    /// stretch (36) so reaching week 37 already shows the completed week-36
+    /// segment filled and the indicator lands exactly on the 37 mark.
+    static let homeStretchStartWeek = 36.0
+    static let homeStretchEndWeek = 40.0   // due
+    static let maxOvertimeDays = 14.0      // cap at 42 weeks
 
     public static func make(for input: PregnancyBarInput,
-                            overtimeStyle: OvertimeStyle = .tear,
-                            homeStretchFloor: Double = 0.14) -> PregnancyBarData {
+                            overtimeStyle: OvertimeStyle = .tear) -> PregnancyBarData {
         let palette = PregnancyPalette.forGender(input.gender)
-        return input.isLaborReady ? homeStretch(input, palette, overtimeStyle, homeStretchFloor)
+        return input.isLaborReady ? homeStretch(input, palette, overtimeStyle)
                                   : fullPregnancy(input, palette)
     }
 
@@ -52,8 +54,7 @@ public struct PregnancyBarData: Sendable {
 
     private static func homeStretch(_ input: PregnancyBarInput,
                                     _ palette: PregnancyPalette,
-                                    _ overtimeStyle: OvertimeStyle,
-                                    _ floor: Double) -> PregnancyBarData {
+                                    _ overtimeStyle: OvertimeStyle) -> PregnancyBarData {
         // On-time span = weeks 37→40 across the full pill (overtime tears off).
         // Light tint behind the deep ramp keeps the unfilled track clean.
         let trackTint = palette.trimester1.first
@@ -63,20 +64,26 @@ public struct PregnancyBarData: Sendable {
         let segments = [
             ProgressSegment(id: 0, fraction: 1.0, fill: hsFill, tint: trackTint)
         ]
-        let markers = [(37, 0.0), (38, 1.0 / 3.0), (39, 2.0 / 3.0), (40, 1.0)]
+        // 36→40 window: 36 at the left (its segment already filled by week 37),
+        // then 37/38/39/40 evenly across. So the indicator lands on the true
+        // week and the week-36 portion reads as "you've reached the home stretch."
+        let span = homeStretchEndWeek - homeStretchStartWeek   // 4 weeks
+        let markers = [36, 37, 38, 39, 40]
             .enumerated()
-            .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }
+            .map { (i, wk) in
+                ProgressMarker(id: i,
+                               position: (Double(wk) - homeStretchStartWeek) / span,
+                               label: "\(wk)")
+            }
         // Overtime weeks 41/42 within the overtime capsule (40→42).
         let otMarkers = [(41, 0.5), (42, 1.0)]
             .enumerated()
             .map { ProgressMarker(id: 100 + $0.offset, position: $0.element.1, label: "\($0.element.0)") }
 
-        // Progress toward the due date within the 21-day window (0→1 fills the pill).
-        let daysInto = homeStretchWindowDays - Double(input.daysUntilDue)
-        let toDue = min(max(daysInto / homeStretchWindowDays, 0), 1)
-        // Floor: reaching the home stretch shows a small "you've arrived" nub
-        // rather than an empty bar at week 37.
-        var fill = floor + toDue * (1 - floor)
+        // Fill from the true week position within 36→40 — no offset, so the
+        // indicator aligns exactly with the week marks.
+        let weeks = Double(input.completedWeeks) + Double(input.dayOfWeek) / 7.0
+        var fill = min(max((weeks - homeStretchStartWeek) / span, 0), 1)
         var overtime = OvertimeConfig(fraction: 0, activeWeeks: 0, style: overtimeStyle)
 
         if input.isOverdue {
@@ -133,27 +140,23 @@ public struct PregnancyTimelineBar: View {
     public var style: ProgressStyle
     public var overtimeStyle: OvertimeStyle
     public var label: TimelineLabel
-    public var homeStretchFloor: Double
 
     public init(input: PregnancyBarInput,
                 size: BarSize = .standard,
                 overlays: ProgressOverlays = .full,
                 style: ProgressStyle = .glass,
                 overtimeStyle: OvertimeStyle = .tear,
-                label: TimelineLabel = .days,
-                homeStretchFloor: Double = 0.14) {
+                label: TimelineLabel = .days) {
         self.input = input
         self.size = size
         self.overlays = overlays
         self.style = style
         self.overtimeStyle = overtimeStyle
         self.label = label
-        self.homeStretchFloor = homeStretchFloor
     }
 
     public var body: some View {
-        let data = PregnancyBarData.make(for: input, overtimeStyle: overtimeStyle,
-                                         homeStretchFloor: homeStretchFloor)
+        let data = PregnancyBarData.make(for: input, overtimeStyle: overtimeStyle)
         let days = data.valueText
         let week = Self.weekText(input.completedWeeks)
         let leading: AttributedString?
