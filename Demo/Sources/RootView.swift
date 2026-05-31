@@ -8,6 +8,7 @@ struct RootView: View {
     @State private var week: Double
     @State private var gender: Gender
     @State private var coloring: RingColoring
+    private let unfilled: UnfilledStyle
     private let showChrome: Bool
 
     init() {
@@ -16,8 +17,11 @@ struct RootView: View {
         _week = State(initialValue: s.week)
         _gender = State(initialValue: s.gender)
         _coloring = State(initialValue: s.coloring)
+        unfilled = s.unfilled
         showChrome = s.chrome
     }
+
+    private var style: ProgressStyle { ProgressStyle.glass.unfilled(unfilled) }
 
     private var input: PregnancyBarInput {
         PregnancyBarInput(
@@ -52,7 +56,7 @@ struct RootView: View {
             }
             .navigationTitle("mvProgressKit")
             .navigationDestination(for: DemoScreen.self) { screen in
-                DetailPage(screen: screen, input: input, coloring: $coloring)
+                DetailPage(screen: screen, input: input, coloring: $coloring, style: style)
                     .navigationTitle(screen.title)
                     .navigationBarTitleDisplayMode(.inline)
             }

@@ -68,10 +68,18 @@ public struct ProgressRing<Center: View>: View {
     private var fraction: Double { min(max(fillFraction, 0), 1) }
     private var stroke: StrokeStyle { StrokeStyle(lineWidth: lineWidth, lineCap: style.lineCap) }
 
+    /// Track paint: neutral color, or a light shade of the fill.
+    private var resolvedTrack: AnyShapeStyle {
+        switch style.unfilled {
+        case .neutral:        return AnyShapeStyle(trackColor)
+        case .shade(let amt): return AnyShapeStyle(fill.leadColor.lightened(by: amt))
+        }
+    }
+
     public var body: some View {
         ZStack {
             ArcShape(span: span, lineWidth: lineWidth)
-                .stroke(trackColor, style: stroke)
+                .stroke(resolvedTrack, style: stroke)
             ArcShape(span: span, lineWidth: lineWidth)
                 .trim(from: 0, to: fraction)
                 .stroke(fill.radialStyle(), style: stroke)

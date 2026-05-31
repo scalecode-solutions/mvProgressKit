@@ -93,17 +93,20 @@ public struct PregnancyRings: View {
     public var input: PregnancyBarInput
     public var arrangement: RingArrangement
     public var coloring: RingColoring
+    public var style: ProgressStyle
     public var lineWidth: CGFloat
     public var spacing: CGFloat
 
     public init(input: PregnancyBarInput,
                 arrangement: RingArrangement = .containment,
                 coloring: RingColoring = .byRadius,
+                style: ProgressStyle = .glass,
                 lineWidth: CGFloat = 12,
                 spacing: CGFloat = 4) {
         self.input = input
         self.arrangement = arrangement
         self.coloring = coloring
+        self.style = style
         self.lineWidth = lineWidth
         self.spacing = spacing
     }
@@ -117,7 +120,7 @@ public struct PregnancyRings: View {
                 MultiRing(rings: PregnancyRingData.rings(for: input,
                                                          arrangement: arrangement,
                                                          coloring: coloring),
-                          lineWidth: lineWidth, spacing: spacing)
+                          lineWidth: lineWidth, spacing: spacing, style: style)
                 VStack(spacing: 0) {
                     Text("\(input.completedWeeks)")
                         .font(.system(size: innerDiameter * 0.42, weight: .bold))

@@ -48,6 +48,17 @@ public struct BarSize: Equatable, Sendable {
                                         horizontalPadding: 8, markerFont: 8)
 }
 
+// MARK: - Unfilled track
+
+/// How the unfilled (track) region is painted — a flag every component honors.
+public enum UnfilledStyle: Sendable, Equatable {
+    /// A fixed neutral track (`ProgressStyle.trackColor`) — today's look.
+    case neutral
+    /// A light shade of the *fill* color, blended toward white by `amount`
+    /// (0→fill color, 1→white). Reads as a clean pastel ghost of the fill.
+    case shade(Double)
+}
+
 // MARK: - Shared style tokens
 
 /// Visual tokens shared across every progress component, so a bar, a ring,
@@ -57,6 +68,8 @@ public struct ProgressStyle: Sendable {
     public var glassTrack: Bool
     /// Track color (used as the flat track, and as the low-opacity base).
     public var trackColor: Color
+    /// How the unfilled region is painted (neutral vs light-shade-of-fill).
+    public var unfilled: UnfilledStyle
     /// Stroke cap for radial tracks and step connectors.
     public var lineCap: CGLineCap
     /// Fill animation; `nil` disables animated transitions.
@@ -64,12 +77,21 @@ public struct ProgressStyle: Sendable {
 
     public init(glassTrack: Bool = true,
                 trackColor: Color = Color.gray.opacity(0.15),
+                unfilled: UnfilledStyle = .neutral,
                 lineCap: CGLineCap = .round,
                 animation: Animation? = .easeOut(duration: 0.5)) {
         self.glassTrack = glassTrack
         self.trackColor = trackColor
+        self.unfilled = unfilled
         self.lineCap = lineCap
         self.animation = animation
+    }
+
+    /// Returns a copy with a different unfilled style.
+    public func unfilled(_ style: UnfilledStyle) -> ProgressStyle {
+        var copy = self
+        copy.unfilled = style
+        return copy
     }
 
     /// Default frosted-glass style with a gentle ease-out fill.

@@ -7,6 +7,7 @@ struct DetailPage: View {
     let screen: DemoScreen
     let input: PregnancyBarInput
     @Binding var coloring: RingColoring
+    let style: ProgressStyle
 
     private var palette: PregnancyPalette { .forGender(input.gender) }
     private var deepFill: ProgressFill { .linear(palette.trimester3) }
@@ -37,10 +38,10 @@ struct DetailPage: View {
 
     private var timeline: some View {
         VStack(alignment: .leading, spacing: 24) {
-            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: .full) }
-            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: .full) }
-            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: .lean) }
-            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare) }
+            labeled("standard · full") { PregnancyTimelineBar(input: input, size: .standard, overlays: .full, style: style) }
+            labeled("compact · full") { PregnancyTimelineBar(input: input, size: .compact, overlays: .full, style: style) }
+            labeled("lean · Prep landing") { PregnancyTimelineBar(input: input, size: .standard, overlays: .lean, style: style) }
+            labeled("bare") { PregnancyTimelineBar(input: input, size: .standard, overlays: .bare, style: style) }
         }
     }
 
@@ -76,6 +77,7 @@ struct DetailPage: View {
                 ],
                 fillFraction: demoFraction,
                 size: .standard,
+                style: style,
                 overlays: ProgressOverlays(valueLabel: false, positionDot: true,
                                            glow: true, markers: true, dividers: true)
             )
@@ -84,8 +86,8 @@ struct DetailPage: View {
 
     private var trackbar: some View {
         VStack(alignment: .leading, spacing: 24) {
-            labeled("compact") { TrackBar(fillFraction: demoFraction, fill: deepFill, size: .compact) }
-            labeled("standard") { TrackBar(fillFraction: demoFraction, fill: deepFill, size: .standard) }
+            labeled("compact") { TrackBar(fillFraction: demoFraction, fill: deepFill, size: .compact, style: style) }
+            labeled("standard") { TrackBar(fillFraction: demoFraction, fill: deepFill, size: .standard, style: style) }
         }
     }
 
@@ -98,12 +100,12 @@ struct DetailPage: View {
     private var ring: some View {
         HStack(spacing: 28) {
             radial("with %") {
-                ProgressRing(fillFraction: demoFraction, fill: deepFill, lineWidth: 16) {
+                ProgressRing(fillFraction: demoFraction, fill: deepFill, lineWidth: 16, style: style) {
                     Text("\(Int(demoFraction * 100))%").font(.title2.bold())
                 }
             }
             radial("bare") {
-                ProgressRing(fillFraction: demoFraction, fill: deepFill, lineWidth: 16)
+                ProgressRing(fillFraction: demoFraction, fill: deepFill, lineWidth: 16, style: style)
             }
         }
         .frame(height: 200)
@@ -111,7 +113,7 @@ struct DetailPage: View {
 
     private var gauge: some View {
         radial("gauge · 270°") {
-            ProgressGauge(fillFraction: demoFraction, fill: deepFill, lineWidth: 18) {
+            ProgressGauge(fillFraction: demoFraction, fill: deepFill, lineWidth: 18, style: style) {
                 VStack(spacing: 2) {
                     Text("\(input.completedWeeks)").font(.system(size: 40, weight: .bold))
                     Text("weeks").font(.caption).foregroundStyle(.secondary)
@@ -127,7 +129,7 @@ struct DetailPage: View {
                 RingValue(id: 0, fillFraction: 0.9, fill: .linear(palette.trimester3)),
                 RingValue(id: 1, fillFraction: 0.6, fill: .linear(palette.trimester2)),
                 RingValue(id: 2, fillFraction: 0.4, fill: .linear(palette.trimester1)),
-            ], lineWidth: 16)
+            ], lineWidth: 16, style: style)
         }
         .frame(height: 240)
     }
@@ -144,7 +146,7 @@ struct DetailPage: View {
     private func ringCell(_ tag: String, _ name: String, _ arrangement: RingArrangement) -> some View {
         VStack(spacing: 10) {
             PregnancyRings(input: input, arrangement: arrangement, coloring: coloring,
-                           lineWidth: 13, spacing: 4)
+                           style: style, lineWidth: 13, spacing: 4)
                 .frame(width: 150, height: 150)
             VStack(spacing: 2) {
                 Text(tag).font(.subheadline.bold())
@@ -160,7 +162,7 @@ struct DetailPage: View {
                 RingValue(id: 0, fillFraction: 0.9, fill: .linear(palette.trimester3)),
                 RingValue(id: 1, fillFraction: 0.6, fill: .linear(palette.trimester2)),
                 RingValue(id: 2, fillFraction: 0.4, fill: .linear(palette.trimester1)),
-            ], lineWidth: 13, spacing: 4)
+            ], lineWidth: 13, spacing: 4, style: style)
             .frame(width: 150, height: 150)
             VStack(spacing: 2) {
                 Text("—").font(.subheadline.bold())

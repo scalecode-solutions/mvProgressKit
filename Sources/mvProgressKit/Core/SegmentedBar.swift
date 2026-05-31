@@ -49,6 +49,17 @@ public struct SegmentedBar: View {
         }
     }
 
+    /// Unfilled track color for a segment: neutral low-opacity tint, or a
+    /// clean light shade of the segment's fill.
+    private func segmentTrackColor(_ seg: ProgressSegment) -> Color {
+        switch style.unfilled {
+        case .neutral:
+            return (seg.tint ?? seg.fill.leadColor).opacity(0.15)
+        case .shade(let amt):
+            return seg.fill.leadColor.lightened(by: amt).opacity(0.55)
+        }
+    }
+
     /// Lead color of whichever segment the fill currently sits in (dot/glow tint).
     private var fillColor: Color {
         for (seg, start) in offsets where fill <= start + seg.fraction {
@@ -95,7 +106,7 @@ public struct SegmentedBar: View {
             // Faint per-segment tints
             HStack(spacing: 0) {
                 ForEach(offsets, id: \.seg.id) { (seg, _) in
-                    (seg.tint ?? seg.fill.leadColor).opacity(0.15)
+                    segmentTrackColor(seg)
                         .frame(width: width * seg.fraction)
                 }
                 Spacer(minLength: 0) // reserved tail (overtime) stays clear

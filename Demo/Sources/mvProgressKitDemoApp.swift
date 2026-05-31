@@ -48,16 +48,20 @@ enum DemoLaunch {
         var week: Double
         var gender: Gender
         var coloring: RingColoring
+        var unfilled: UnfilledStyle
         var chrome: Bool
     }
 
     static func initial() -> State {
         let d = UserDefaults.standard
+        let unfilled: UnfilledStyle = d.string(forKey: "unfilled") == "neutral"
+            ? .neutral : .shade(0.85)
         return State(
             screen: d.string(forKey: "screen").flatMap(DemoScreen.init(rawValue:)),
             week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : 24.5,
             gender: d.string(forKey: "gender").flatMap(Gender.init(rawValue:)) ?? .girl,
             coloring: d.string(forKey: "coloring").flatMap(RingColoring.init(rawValue:)) ?? .byRadius,
+            unfilled: unfilled,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }
