@@ -7,6 +7,8 @@ import SwiftUI
 public struct SegmentedBar: View {
     public var segments: [ProgressSegment]
     public var markers: [ProgressMarker]
+    /// Markers positioned within the overtime region (0…1 of that capsule).
+    public var overtimeMarkers: [ProgressMarker]
     public var fillFraction: Double
     public var overtime: OvertimeConfig?
     /// Leading caption / in-bar pill text.
@@ -19,6 +21,7 @@ public struct SegmentedBar: View {
 
     public init(segments: [ProgressSegment],
                 markers: [ProgressMarker] = [],
+                overtimeMarkers: [ProgressMarker] = [],
                 fillFraction: Double,
                 overtime: OvertimeConfig? = nil,
                 valueText: AttributedString? = nil,
@@ -28,6 +31,7 @@ public struct SegmentedBar: View {
                 overlays: ProgressOverlays = .full) {
         self.segments = segments
         self.markers = markers
+        self.overtimeMarkers = overtimeMarkers
         self.fillFraction = fillFraction
         self.overtime = overtime
         self.valueText = valueText
@@ -98,7 +102,9 @@ public struct SegmentedBar: View {
                         overtimeRegion(ot, width: otWidth).offset(x: otStart)
                     }
                 }
-                if overlays.markerTicks { tickMarks(width: mainPx) }
+                if overlays.markerTicks {
+                    tickMarks(mainPx: mainPx, otStart: otStart, otWidth: otWidth, showOT: showOT)
+                }
                 positionIndicator(width: mainPx)
                 if overlays.caption == .inside, let valueText { valueLabelView(valueText) }
             }
@@ -113,18 +119,37 @@ public struct SegmentedBar: View {
     private var markerLabelRow: some View {
         GeometryReader { geo in
             let w = geo.size.width
+            let mainW = overtime?.resolvedMainWidth ?? 1.0
+            let mainPx = w * mainW
+            let showOT = overtime?.isShown ?? false
+            let gapPx = w * (overtime?.gap ?? 0)
+            let otStart = mainPx + gapPx
+            let otWidth = max(w - otStart, 0)
+
             ForEach(markers) { marker in
                 if let label = marker.label {
-                    Text(label)
-                        .font(.system(size: size.markerFont + 1, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .fixedSize()
-                        .position(x: min(max(w * marker.position, 10), w - 10), y: 8)
+                    labelText(label).position(x: clampX(mainPx * marker.position, w), y: 8)
+                }
+            }
+            if showOT {
+                ForEach(overtimeMarkers) { marker in
+                    if let label = marker.label {
+                        labelText(label).position(x: clampX(otStart + otWidth * marker.position, w), y: 8)
+                    }
                 }
             }
         }
         .frame(height: 16)
     }
+
+    private func labelText(_ s: String) -> some View {
+        Text(s)
+            .font(.system(size: size.markerFont + 1, weight: .medium))
+            .foregroundStyle(.secondary)
+            .fixedSize()
+    }
+
+    private func clampX(_ x: CGFloat, _ w: CGFloat) -> CGFloat { min(max(x, 10), w - 10) }
 
     // MARK: Liquid Glass backing
 
@@ -271,13 +296,21 @@ public struct SegmentedBar: View {
     // MARK: Inside overlays
 
     @ViewBuilder
-    private func tickMarks(width: CGFloat) -> some View {
+    private func tickMarks(mainPx: CGFloat, otStart: CGFloat, otWidth: CGFloat, showOT: Bool) -> some View {
         ForEach(markers) { marker in
-            Rectangle()
-                .fill(Color.white.opacity(0.4))
-                .frame(width: 1, height: size.height * 0.4)
-                .offset(x: width * marker.position - 0.5)
+            tick.offset(x: mainPx * marker.position - 0.5)
         }
+        if showOT {
+            ForEach(overtimeMarkers) { marker in
+                tick.offset(x: otStart + otWidth * marker.position - 0.5)
+            }
+        }
+    }
+
+    private var tick: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.4))
+            .frame(width: 1, height: size.height * 0.4)
     }
 
     @ViewBuilder

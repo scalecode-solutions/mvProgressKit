@@ -7,6 +7,7 @@ import SwiftUI
 public struct PregnancyBarData: Sendable {
     public var segments: [ProgressSegment]
     public var markers: [ProgressMarker]
+    public var overtimeMarkers: [ProgressMarker] = []
     public var fillFraction: Double
     public var overtime: OvertimeConfig?
     public var valueText: AttributedString
@@ -63,6 +64,10 @@ public struct PregnancyBarData: Sendable {
         let markers = [(37, 0.0), (38, 1.0 / 3.0), (39, 2.0 / 3.0), (40, 1.0)]
             .enumerated()
             .map { ProgressMarker(id: $0.offset, position: $0.element.1, label: "\($0.element.0)") }
+        // Overtime weeks 41/42 within the overtime capsule (40→42).
+        let otMarkers = [(41, 0.5), (42, 1.0)]
+            .enumerated()
+            .map { ProgressMarker(id: 100 + $0.offset, position: $0.element.1, label: "\($0.element.0)") }
 
         // Progress toward the due date within the 21-day window (0→1 fills the pill).
         let daysInto = homeStretchWindowDays - Double(input.daysUntilDue)
@@ -81,6 +86,7 @@ public struct PregnancyBarData: Sendable {
         }
 
         return PregnancyBarData(segments: segments, markers: markers,
+                                overtimeMarkers: otMarkers,
                                 fillFraction: fill, overtime: overtime,
                                 valueText: daysValue(input.daysUntilDue))
     }
@@ -153,6 +159,7 @@ public struct PregnancyTimelineBar: View {
 
         return SegmentedBar(segments: data.segments,
                             markers: data.markers,
+                            overtimeMarkers: data.overtimeMarkers,
                             fillFraction: data.fillFraction,
                             overtime: data.overtime,
                             valueText: leading,
