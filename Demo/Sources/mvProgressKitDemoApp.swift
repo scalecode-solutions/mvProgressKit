@@ -52,11 +52,13 @@ enum DemoLaunch {
         var overtime: OvertimeStyle
         var glass: Bool
         var indicator: PositionIndicator
+        var animate: Bool
         var chrome: Bool
     }
 
     static func initial() -> State {
         let d = UserDefaults.standard
+        let animate = d.bool(forKey: "animate")
         let showBase = d.object(forKey: "base") != nil ? d.bool(forKey: "base") : false
         let unfilled: UnfilledStyle = d.string(forKey: "unfilled") == "neutral"
             ? .neutral : .shade(lighten: 0.85, opacity: 0.3, base: showBase)
@@ -72,13 +74,14 @@ enum DemoLaunch {
         }
         return State(
             screen: d.string(forKey: "screen").flatMap(DemoScreen.init(rawValue:)),
-            week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : 24.5,
+            week: d.object(forKey: "week") != nil ? d.double(forKey: "week") : (animate ? 39 : 24.5),
             gender: d.string(forKey: "gender").flatMap(Gender.init(rawValue:)) ?? .girl,
             coloring: d.string(forKey: "coloring").flatMap(RingColoring.init(rawValue:)) ?? .byRadius,
             unfilled: unfilled,
             overtime: overtime,
             glass: d.object(forKey: "glass") != nil ? d.bool(forKey: "glass") : true,
             indicator: indicator,
+            animate: animate,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }

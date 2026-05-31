@@ -36,6 +36,8 @@ public struct SegmentedBar: View {
         self.overlays = overlays
     }
 
+    @Namespace private var glassNS
+
     private var radius: CGFloat { size.height / 2 }
     private var fill: Double { min(max(fillFraction, 0), 1) }
 
@@ -95,32 +97,36 @@ public struct SegmentedBar: View {
     @ViewBuilder
     private func glassLayer(mainPx: CGFloat, otStart: CGFloat,
                             otWidth: CGFloat, showOT: Bool) -> some View {
-        GlassEffectContainer(spacing: size.height * 0.35) {
+        GlassEffectContainer(spacing: size.height * 0.4) {
             ZStack(alignment: .leading) {
                 glassRegion(width: mainPx, frac: fill,
-                            left: true, right: !showOT, tint: fillColor)
+                            left: true, right: !showOT, tint: fillColor, idSuffix: "main")
                 if showOT, let ot = overtime {
                     glassRegion(width: otWidth, frac: ot.fraction,
                                 left: false, right: true,
-                                tint: segments.last?.fill.leadColor ?? .accentColor)
+                                tint: segments.last?.fill.leadColor ?? .accentColor,
+                                idSuffix: "ot")
                         .offset(x: otStart)
                 }
             }
         }
+        .animation(style.animation, value: showOT)
         .modifier(AnimateFill(animation: style.animation, value: fill))
     }
 
     @ViewBuilder
     private func glassRegion(width: CGFloat, frac: Double,
-                             left: Bool, right: Bool, tint: Color) -> some View {
+                             left: Bool, right: Bool, tint: Color, idSuffix: String) -> some View {
         let shape = pill(left: left, right: right)
         let f = min(max(frac, 0), 1)
         ZStack(alignment: .leading) {
             shape.fill(.clear).glassEffect(.regular, in: shape)
+                .glassEffectID("track-\(idSuffix)", in: glassNS)
             Capsule().fill(.clear)
                 .glassEffect(.regular.tint(tint), in: Capsule())
                 .frame(width: max(width * f, size.height), height: size.height)
                 .opacity(f > 0.001 ? 1 : 0)
+                .glassEffectID("fill-\(idSuffix)", in: glassNS)
         }
         .frame(width: width, height: size.height, alignment: .leading)
     }

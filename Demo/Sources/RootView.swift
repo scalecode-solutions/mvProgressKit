@@ -12,6 +12,7 @@ struct RootView: View {
     private let overtimeStyle: OvertimeStyle
     private let useGlass: Bool
     private let indicator: PositionIndicator
+    private let useAnimate: Bool
     private let showChrome: Bool
 
     init() {
@@ -24,6 +25,7 @@ struct RootView: View {
         overtimeStyle = s.overtime
         useGlass = s.glass
         indicator = s.indicator
+        useAnimate = s.animate
         showChrome = s.chrome
     }
 
@@ -75,6 +77,13 @@ struct RootView: View {
         .preferredColorScheme(.dark)
         .safeAreaInset(edge: .bottom) {
             if showChrome { footer }
+        }
+        .onAppear {
+            if useAnimate {
+                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                    week = 42
+                }
+            }
         }
     }
 
