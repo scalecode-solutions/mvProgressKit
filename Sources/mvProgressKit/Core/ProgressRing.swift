@@ -82,6 +82,10 @@ public struct ProgressRing<Center: View>: View {
     }
 
     public var body: some View {
+        if style.glass { glassBody } else { standardBody }
+    }
+
+    private var standardBody: some View {
         ZStack {
             ArcShape(span: span, lineWidth: lineWidth)
                 .stroke(resolvedTrack, style: stroke)
@@ -91,6 +95,40 @@ public struct ProgressRing<Center: View>: View {
                 .modifier(AnimateRing(animation: style.animation, value: fraction))
             center()
         }
+    }
+
+    /// Liquid Glass ring: glass is clipped to a `RingBand` (the stroked arc as a
+    /// fillable shape), since `glassEffect` needs a region, not a thin stroke.
+    private var glassBody: some View {
+        GlassEffectContainer {
+            ZStack {
+                Color.clear
+                    .glassEffect(.regular, in: RingBand(span: span, lineWidth: lineWidth, fraction: 1))
+                Color.clear
+                    .glassEffect(.regular.tint(fill.leadColor),
+                                 in: RingBand(span: span, lineWidth: lineWidth, fraction: fraction))
+                    .modifier(AnimateRing(animation: style.animation, value: fraction))
+                center()
+            }
+        }
+    }
+}
+
+/// The stroked arc as a *filled* shape — lets `glassEffect(in:)` paint the ring
+/// band as Liquid Glass (it can't apply to a thin stroke directly).
+public struct RingBand: Shape {
+    public var span: ArcSpan
+    public var lineWidth: CGFloat
+    public var fraction: Double
+    public init(span: ArcSpan, lineWidth: CGFloat, fraction: Double) {
+        self.span = span
+        self.lineWidth = lineWidth
+        self.fraction = fraction
+    }
+    public func path(in rect: CGRect) -> Path {
+        let arc = ArcShape(span: span, lineWidth: lineWidth).path(in: rect)
+        let trimmed = arc.trimmedPath(from: 0, to: CGFloat(min(max(fraction, 0), 1)))
+        return trimmed.strokedPath(StrokeStyle(lineWidth: lineWidth, lineCap: .round))
     }
 }
 
