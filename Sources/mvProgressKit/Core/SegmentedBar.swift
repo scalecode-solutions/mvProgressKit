@@ -3,14 +3,14 @@ import SwiftUI
 /// The workhorse linear bar: proportional segments, optional markers, a
 /// position dot, a value label, a glow, and split-pill overtime.
 ///
-/// Everything is data-driven — `segments`/`markers` come from a factory (e.g.
-/// the Pregnancy layer), so this view knows nothing about trimesters or weeks.
-/// When `overtime` is shown, the on-time span and the overtime span render as
-/// two separate capsules (rounded outer ends, flat inner ends) with a gap.
+/// Data-driven — `segments`/`markers` come from a factory (e.g. the Pregnancy
+/// layer), so this view knows nothing about trimesters or weeks. With
+/// `style.glass` the track + fill render as real Liquid Glass capsules inside a
+/// `GlassEffectContainer`; otherwise they're gradient/shade fills. Overlays
+/// (markers, dot, value) draw on top of either backing.
 public struct SegmentedBar: View {
     public var segments: [ProgressSegment]
     public var markers: [ProgressMarker]
-    /// Fill within the on-time span, 0...1 (overtime fill lives in `overtime`).
     public var fillFraction: Double
     public var overtime: OvertimeConfig?
     public var valueText: AttributedString?
@@ -65,11 +65,15 @@ public struct SegmentedBar: View {
             let otWidth = max(w - otStart, 0)
 
             ZStack(alignment: .leading) {
-                mainRegion(width: mainPx, squaredRight: showOT)
-                if showOT, let ot = overtime {
-                    overtimeRegion(ot, width: otWidth)
-                        .offset(x: otStart)
+                if style.glass {
+                    glassLayer(mainPx: mainPx, otStart: otStart, otWidth: otWidth, showOT: showOT)
+                } else {
+                    mainRegion(width: mainPx, squaredRight: showOT)
+                    if showOT, let ot = overtime {
+                        overtimeRegion(ot, width: otWidth).offset(x: otStart)
+                    }
                 }
+                overlayLayer(width: mainPx)
             }
             .frame(height: size.height)
             .animation(style.animation, value: mainW)
@@ -77,7 +81,51 @@ public struct SegmentedBar: View {
         .frame(height: size.height)
     }
 
-    // MARK: On-time region
+    // MARK: Overlays (markers / dot / value) — shared across backings
+
+    @ViewBuilder
+    private func overlayLayer(width: CGFloat) -> some View {
+        if overlays.markers { markerTicks(width: width) }
+        if overlays.positionDot { positionDot(width: width) }
+        if overlays.valueLabel, let valueText { valueLabelView(valueText) }
+    }
+
+    // MARK: Liquid Glass backing
+
+    @ViewBuilder
+    private func glassLayer(mainPx: CGFloat, otStart: CGFloat,
+                            otWidth: CGFloat, showOT: Bool) -> some View {
+        GlassEffectContainer(spacing: size.height * 0.35) {
+            ZStack(alignment: .leading) {
+                glassRegion(width: mainPx, frac: fill,
+                            left: true, right: !showOT, tint: fillColor)
+                if showOT, let ot = overtime {
+                    glassRegion(width: otWidth, frac: ot.fraction,
+                                left: false, right: true,
+                                tint: segments.last?.fill.leadColor ?? .accentColor)
+                        .offset(x: otStart)
+                }
+            }
+        }
+        .modifier(AnimateFill(animation: style.animation, value: fill))
+    }
+
+    @ViewBuilder
+    private func glassRegion(width: CGFloat, frac: Double,
+                             left: Bool, right: Bool, tint: Color) -> some View {
+        let shape = pill(left: left, right: right)
+        let f = min(max(frac, 0), 1)
+        ZStack(alignment: .leading) {
+            shape.fill(.clear).glassEffect(.regular, in: shape)
+            Capsule().fill(.clear)
+                .glassEffect(.regular.tint(tint), in: Capsule())
+                .frame(width: max(width * f, size.height), height: size.height)
+                .opacity(f > 0.001 ? 1 : 0)
+        }
+        .frame(width: width, height: size.height, alignment: .leading)
+    }
+
+    // MARK: Standard backing
 
     @ViewBuilder
     private func mainRegion(width: CGFloat, squaredRight: Bool) -> some View {
@@ -86,14 +134,9 @@ public struct SegmentedBar: View {
             trackLayer(width: width).clipShape(shape)
             fillLayer(width: width).clipShape(shape)
                 .modifier(AnimateFill(animation: style.animation, value: fill))
-            if overlays.markers { markerTicks(width: width) }
-            if overlays.positionDot { positionDot(width: width) }
-            if overlays.valueLabel, let valueText { valueLabelView(valueText) }
         }
         .frame(width: width, height: size.height, alignment: .leading)
     }
-
-    // MARK: Overtime region (the torn-off pill)
 
     @ViewBuilder
     private func overtimeRegion(_ ot: OvertimeConfig, width: CGFloat) -> some View {
@@ -126,10 +169,8 @@ public struct SegmentedBar: View {
         )
     }
 
-    // MARK: Layers
+    // MARK: Track + fill layers (standard)
 
-    /// Whether the material/color base renders behind the tints. Always on for
-    /// neutral; for shade it follows the `base` flag (off = airy/translucent).
     private var showsBase: Bool {
         switch style.unfilled {
         case .neutral:               return true
@@ -186,6 +227,8 @@ public struct SegmentedBar: View {
             bar
         }
     }
+
+    // MARK: Overlay pieces
 
     @ViewBuilder
     private func markerTicks(width: CGFloat) -> some View {

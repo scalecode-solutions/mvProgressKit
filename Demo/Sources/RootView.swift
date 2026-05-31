@@ -10,6 +10,7 @@ struct RootView: View {
     @State private var coloring: RingColoring
     private let unfilled: UnfilledStyle
     private let overtimeStyle: OvertimeStyle
+    private let useGlass: Bool
     private let showChrome: Bool
 
     init() {
@@ -20,10 +21,15 @@ struct RootView: View {
         _coloring = State(initialValue: s.coloring)
         unfilled = s.unfilled
         overtimeStyle = s.overtime
+        useGlass = s.glass
         showChrome = s.chrome
     }
 
-    private var style: ProgressStyle { ProgressStyle.glass.unfilled(unfilled) }
+    private var style: ProgressStyle {
+        var s = ProgressStyle.glass.unfilled(unfilled)
+        s.glass = useGlass
+        return s
+    }
 
     private var input: PregnancyBarInput {
         PregnancyBarInput(

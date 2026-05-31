@@ -50,6 +50,7 @@ enum DemoLaunch {
         var coloring: RingColoring
         var unfilled: UnfilledStyle
         var overtime: OvertimeStyle
+        var glass: Bool
         var chrome: Bool
     }
 
@@ -67,6 +68,7 @@ enum DemoLaunch {
             coloring: d.string(forKey: "coloring").flatMap(RingColoring.init(rawValue:)) ?? .byRadius,
             unfilled: unfilled,
             overtime: overtime,
+            glass: d.object(forKey: "glass") != nil ? d.bool(forKey: "glass") : true,
             chrome: d.object(forKey: "chrome") != nil ? d.bool(forKey: "chrome") : true
         )
     }

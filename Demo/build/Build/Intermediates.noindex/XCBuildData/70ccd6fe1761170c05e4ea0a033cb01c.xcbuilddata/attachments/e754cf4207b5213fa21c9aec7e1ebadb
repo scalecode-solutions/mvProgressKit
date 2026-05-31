@@ -16,6 +16,16 @@
     "swift-dependencies" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Hex.swiftdeps",
     "swiftmodule" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Hex~partial.swiftmodule"
   },
+  "/Users/tmarq/Github/mvProgressKit/Sources/mvProgressKit/Core/Color+Lighten.swift" : {
+    "const-values" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.swiftconstvalues",
+    "dependencies" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.d",
+    "diagnostics" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.dia",
+    "index-unit-output-path" : "/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.o",
+    "llvm-bc" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.bc",
+    "object" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.o",
+    "swift-dependencies" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten.swiftdeps",
+    "swiftmodule" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Color+Lighten~partial.swiftmodule"
+  },
   "/Users/tmarq/Github/mvProgressKit/Sources/mvProgressKit/Core/Gauge.swift" : {
     "const-values" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Gauge.swiftconstvalues",
     "dependencies" : "/Users/tmarq/Github/mvProgressKit/Demo/build/Build/Intermediates.noindex/mvProgressKit.build/Debug-iphonesimulator/mvProgressKit.build/Objects-normal/arm64/Gauge.d",

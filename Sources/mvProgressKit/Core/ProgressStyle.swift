@@ -72,6 +72,9 @@ public struct ProgressStyle: Sendable {
     public var trackColor: Color
     /// How the unfilled region is painted (neutral vs light-shade-of-fill).
     public var unfilled: UnfilledStyle
+    /// Render track + fill as real Liquid Glass (iOS/macOS 26). Overrides the
+    /// track/fill paint with tinted glass capsules in a `GlassEffectContainer`.
+    public var glass: Bool
     /// Stroke cap for radial tracks and step connectors.
     public var lineCap: CGLineCap
     /// Fill animation; `nil` disables animated transitions.
@@ -80,11 +83,13 @@ public struct ProgressStyle: Sendable {
     public init(glassTrack: Bool = true,
                 trackColor: Color = Color.gray.opacity(0.15),
                 unfilled: UnfilledStyle = .neutral,
+                glass: Bool = false,
                 lineCap: CGLineCap = .round,
                 animation: Animation? = .easeOut(duration: 0.5)) {
         self.glassTrack = glassTrack
         self.trackColor = trackColor
         self.unfilled = unfilled
+        self.glass = glass
         self.lineCap = lineCap
         self.animation = animation
     }
@@ -100,4 +105,6 @@ public struct ProgressStyle: Sendable {
     public static let glass = ProgressStyle()
     /// Flat (non-material) track — cheaper, good for small/task bars.
     public static let flat = ProgressStyle(glassTrack: false)
+    /// Real Liquid Glass track + fill.
+    public static let liquidGlass = ProgressStyle(glass: true)
 }
